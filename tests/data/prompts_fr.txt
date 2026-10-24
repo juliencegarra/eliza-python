@@ -1,0 +1,48 @@
+# Entrées françaises pour les tests différentiels (écrites pour ce projet, CC0).
+# Une seule conversation : l'ordre compte (LIMIT, mémoires, rotation des réponses).
+Bonjour.
+Je suis très fatigué en ce moment.
+Ma sœur ne m'écoute jamais.
+Vous êtes une machine, n'est-ce pas ?
+Je ne sais pas pourquoi je suis venu.
+Peut-être que c'est à cause de mon travail.
+Mon travail me prend tout mon temps.
+Rien ne se passe plus.
+J'ai rêvé de l'océan cette nuit.
+Je rêve souvent que je tombe, mais je me réveille toujours.
+Vous souvenez-vous de ma sœur ?
+Je me souviens de mon enfance.
+Les ordinateurs me font un peu peur.
+Pourquoi ne répondez-vous pas à mes questions ?
+Tout le monde est contre moi.
+Personne ne me comprend.
+Pouvez-vous m'aider ?
+Que pensez-vous de moi ?
+Comment peut-on vivre ainsi ?
+Quand cela a-t-il commencé ?
+Oui.
+Non.
+Non, pas vraiment.
+Je sens que vous me jugez.
+Je pense que ma mère voulait autre chose pour moi.
+Mon père était très sévère.
+Mon frère et ma femme se disputent sans cesse.
+Vous me rappelez mon père.
+Je veux être heureux à nouveau.
+J'ai besoin de vacances.
+Je ne peux pas arrêter de m'inquiéter.
+Êtes-vous un vrai docteur ?
+Si seulement les choses étaient différentes.
+Désolé, je divague.
+Désolée d'être si négative.
+Mes enfants sont partis.
+Eh bien.
+Parce que.
+Il fait gris.
+C’est pareil tous les jours.
+Vos questions sont étranges.
+J'ai 3 chats et 2 chiens.
+J’utilise des « guillemets » aujourd’hui.
+Cette phrase finit par un mot très long : extraordinairement
+Je déteste ma vie parfois.
+C'est tout.

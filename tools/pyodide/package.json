@@ -1,0 +1,12 @@
+{
+  "name": "eliza-pyodide-tests",
+  "private": true,
+  "description": "Runs the eliza-python test suite inside Pyodide (Node.js)",
+  "type": "module",
+  "scripts": {
+    "test": "node run_tests.mjs"
+  },
+  "devDependencies": {
+    "pyodide": "314.0.7"
+  }
+}

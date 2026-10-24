@@ -218,3 +218,13 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ELIZA reference material fetched by tools/references.py (not redistributed)
+references/
+
+# Pyodide test runner dependencies (npm install in tools/pyodide)
+node_modules/
+
+# documents de travail gardés hors du dépôt
+LICENSES.md
+METHODE.md

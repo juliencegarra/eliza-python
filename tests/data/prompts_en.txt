@@ -1,0 +1,68 @@
+# English inputs for the differential tests (written for this project, CC0).
+# One conversation: the order matters (LIMIT, memories, reassembly cycling).
+Hello there.
+I am feeling rather tired today.
+My sister never listens to me.
+You are a machine, aren't you?
+I'm not sure why I came here.
+Perhaps it is because of my work.
+Maybe I just need to talk.
+My work takes all my time.
+Nothing happens anymore.
+I dreamt about the ocean last night.
+I dream of falling, but I always wake up.
+Do you remember my sister?
+I remember my childhood very well.
+Computers frighten me a little.
+Why don't you answer my questions?
+Why can't I sleep properly?
+Everybody seems to be against me.
+Nobody understands what I mean.
+Can you help me?
+Can I trust you?
+What do you think of me?
+How can anyone live like this?
+When did this begin?
+Yes.
+No.
+No, not really.
+I feel that you are judging me.
+I think my mother wanted something else for me.
+My father was very strict.
+My brother and my wife argue all the time.
+You remind me of my father.
+I want to be happy again.
+I need a holiday, and a long one.
+I can't stop worrying about money.
+I don't like crowds.
+Are you a real doctor?
+Am I making any sense?
+Were you listening?
+If only things were different.
+I wish I were somebody else.
+I am sorry for being so negative.
+Apologies, I am rambling.
+You're very patient.
+My children have left home.
+Well.
+Hmm.
+I see.
+Because I said so.
+The weather is grey.
+It's like this every day, the same thing again.
+Your questions are strange.
+I have 3 cats and 2 dogs.
+I’m using “curly quotes” today.
+This sentence ends with a long word: extraordinarily
+Let's talk about Gloucestershire
+My purpose is unclear
+Isolation, isolation, isolation.
+Everyone I know is alike.
+I believe you can't really understand me.
+You don't argue with me.
+You are afraid of me.
+I was wrong about you.
+Tell me something about yourself.
+Do you like yourself?
+I hate myself sometimes.
+That is all.

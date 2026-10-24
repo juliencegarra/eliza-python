@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eliza-1966"
+version = "0.1.0"
+description = "A faithful Python port of Joseph Weizenbaum's ELIZA (1966) and its DOCTOR script"
+readme = "README.md"
+license = "MIT AND CC0-1.0"
+license-files = ["LICENSE"]
+authors = [{ name = "Julien Cegarra" }]
+requires-python = ">=3.9"
+dependencies = []
+
+[project.scripts]
+eliza = "eliza.__main__:main"
+
+[tool.setuptools]
+packages = ["eliza"]
+
+[tool.setuptools.package-data]
+eliza = ["scripts/*.txt"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = [".", "tests"]

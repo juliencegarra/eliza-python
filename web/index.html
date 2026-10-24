@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ELIZA 1966</title>
+<style>
+  :root {
+    --bg: #f6f4ef; --paper: #fffdf8; --ink: #1f1d1a; --muted: #6b665d;
+    --line: #d9d3c7; --accent: #2f5d50; --eliza: #2f5d50; --user: #1f1d1a;
+    --mono: "Courier New", ui-monospace, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171614; --paper: #201e1b; --ink: #ece7dc; --muted: #a39d91;
+      --line: #3a3631; --accent: #8fc2b0; --eliza: #8fc2b0; --user: #ece7dc;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.5 system-ui, sans-serif; }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 16px; font-size: .9rem; }
+  .bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
+         margin-bottom: 12px; font-size: .9rem; }
+  select, input, button { font: inherit; color: inherit; background: var(--paper);
+         border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+  button { cursor: pointer; }
+  button:disabled { opacity: .5; cursor: default; }
+  #log { background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+         padding: 16px; height: 55vh; min-height: 260px; overflow-y: auto;
+         font-family: var(--mono); font-size: .95rem; white-space: pre-wrap; }
+  .eliza { color: var(--eliza); margin: 0 0 12px; }
+  .user { color: var(--user); margin: 0 0 4px; }
+  .user::before { content: "> "; color: var(--muted); }
+  .trace { color: var(--muted); font-size: .8rem; margin: 0 0 12px; }
+  form { display: flex; gap: 8px; margin-top: 12px; }
+  #say { flex: 1; min-width: 0; font-family: var(--mono); }
+  #status { color: var(--muted); font-size: .85rem; margin-top: 8px; }
+  #detected { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <h1>ELIZA (Weizenbaum, 1966)</h1>
+  <p class="sub">Portage Python fidèle, exécuté dans le navigateur par Pyodide.<br>Contact : Julien.Cegarra@univ-jfc.fr</p>
+
+  <div class="bar">
+    <label>Script
+      <select id="script">
+        <option value="doctor">DOCTOR (mars 1965, anglais ou français)</option>
+        <option value="palindrome">Machine de Turing : palindrome</option>
+        <option value="equal-number">Machine de Turing : autant de A que de B</option>
+        <option value="file">Fichier de script…</option>
+      </select>
+    </label>
+    <label>Langue
+      <select id="lang">
+        <option value="auto">automatique</option>
+        <option value="en">anglais</option>
+        <option value="fr">français</option>
+      </select>
+    </label>
+    <span id="detected"></span>
+    <label><input type="checkbox" id="trace"> trace</label>
+    <input type="file" id="file" accept=".txt" hidden>
+  </div>
+
+  <div id="log" aria-live="polite"></div>
+  <form id="form">
+    <input id="say" autocomplete="off" placeholder="Chargement de Pyodide…" disabled>
+    <button id="send" disabled>Envoyer</button>
+  </form>
+  <div id="status">Chargement…</div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
+<script>
+// The package is read from ../eliza/ (serve the repository root over HTTP).
+const FILES = ["__init__.py", "engine.py", "hollerith.py", "languages.py", "match.py",
+               "multilingual.py", "script.py", "text.py",
+               "scripts/doctor_1965_tape100.txt", "scripts/doctor_fr.txt",
+               "scripts/turing_palindrome.txt", "scripts/turing_equal_number.txt"];
+// language of the browser, used by the automatic mode until the user has spoken
+const BROWSER_LANG = (navigator.language || "en").slice(0, 2).toLowerCase();
+const el = (id) => document.getElementById(id);
+let py, session, scriptText = null;
+
+function show(cls, text) {
+  const p = document.createElement("p");
+  p.className = cls;
+  p.textContent = text;
+  el("log").append(p);
+  el("log").scrollTop = el("log").scrollHeight;
+}
+
+// the DOCTOR follows the chosen language (or the user's, in automatic mode);
+// another script keeps its own language and only takes the profile
+// (delimiters, built-in messages) of the chosen one
+const START = `
+from eliza import Conversation, Eliza, builtin_script, doctor, languages, parse
+
+def start(script_name, script_text, lang, browser_lang):
+    if script_text is None and script_name == "doctor":
+        return doctor(lang, start=browser_lang)
+    script = parse(script_text) if script_text is not None else builtin_script(script_name)
+    code = script.metadata.get("language", "en") if lang == "auto" else lang
+    return Eliza(script, languages.get(code))
+
+def language_of(session):
+    return session.language if isinstance(session, Conversation) else session.language.code
+`;
+
+function showLanguage() {
+  const code = py.globals.get("language_of")(session);
+  el("detected").textContent = el("lang").value === "auto" ? `(${code === "fr" ? "français" : "anglais"})` : "";
+}
+
+function start() {
+  el("log").textContent = "";
+  const name = el("script").value === "file" ? null : el("script").value;
+  // undefined, not null: Pyodide turns undefined into None but null into JsNull
+  session = py.globals.get("start")(name ?? undefined, scriptText ?? undefined, el("lang").value, BROWSER_LANG);
+  showLanguage();
+  show("eliza", session.hello());
+  el("say").focus();
+}
+
+async function main() {
+  py = await loadPyodide();
+  py.FS.mkdirTree("/home/pyodide/eliza/scripts");
+  for (const f of FILES) {
+    const r = await fetch("../eliza/" + f);
+    if (!r.ok) throw new Error(`../eliza/${f}: HTTP ${r.status}`);
+    py.FS.writeFile("/home/pyodide/eliza/" + f, new Uint8Array(await r.arrayBuffer()));
+  }
+  py.runPython(START);
+  const info = py.runPython("import sys, eliza; f'Python {sys.version.split()[0]}, eliza {eliza.__version__}'");
+  el("status").textContent = `Pyodide ${py.version}, ${info}.`;
+  el("say").disabled = el("send").disabled = false;
+  el("say").placeholder = "Parlez à ELIZA…";
+  start();
+}
+
+el("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const text = el("say").value;
+  if (!text.trim() || !session) return;
+  el("say").value = "";
+  show("user", text);
+  // tidy display only: the engine keeps blank words, as eliza.cpp does
+  show("eliza", session.response(text).split(/\s+/).filter(Boolean).join(" "));
+  if (el("trace").checked) show("trace", session.trace.text());
+  showLanguage();
+});
+el("script").addEventListener("change", () => {
+  if (el("script").value === "file") el("file").click();
+  else { scriptText = null; start(); }
+});
+el("lang").addEventListener("change", () => start());
+el("file").addEventListener("change", async () => {
+  const f = el("file").files[0];
+  if (!f) return;
+  try { scriptText = await f.text(); start(); }
+  catch (err) { show("trace", String(err.message ?? err)); }
+});
+
+main().catch((err) => { el("status").textContent = "Erreur : " + err; });
+</script>
+</body>
+</html>
