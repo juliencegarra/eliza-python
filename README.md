@@ -1,72 +1,78 @@
 # eliza-python
 
-Un portage Python **fidèle** de l'ELIZA de Joseph Weizenbaum (1966) : pour
-une même entrée et un même script, il donne la même réponse que l'original.
+A Python port of Joseph Weizenbaum's ELIZA (1966), **true to the original**:
+given the same input and the same script, it gives the same reply.
 
-- Il reproduit mot pour mot la conversation publiée dans *CACM* en 1966.
-- Il reproduit, en version 1965, les exécutions du code MAD-SLIP d'origine sur un
-  IBM 7094 émulé (CTSS), jusqu'à l'espacement de la ponctuation et au « = DIT ».
-- Il rejoue onze conversations historiques (1965-1978), soit 278 échanges.
-- Il donne les mêmes réponses que la reconstruction C++ d'Anthony Hay (`eliza.cpp`), qui sert d'oracle aux tests.
-- Il n'utilise que la bibliothèque standard de Python ≥ 3.9, et fonctionne sous Pyodide.
+- It reproduces word for word the conversation published in *CACM* in 1966.
+- In its 1965 version, it reproduces the runs of the original MAD-SLIP code on an
+  emulated IBM 7094 (CTSS), down to the spacing of punctuation and the stray “= DIT”.
+- It replays eleven historical conversations (1965–1978), 278 exchanges in all.
+- It gives the same replies as Anthony Hay's C++ reconstruction (`eliza.cpp`), which the
+  tests use as an oracle.
+- It needs only the Python ≥ 3.9 standard library, and runs under Pyodide.
 
-## Utilisation
+**Try it in the browser:** <https://juliencegarra.github.io/eliza-python/>
+
+## Usage
 
 ```bash
-python -m eliza                       # DOCTOR, script de mars 1965 (domaine public)
-python -m eliza --lang fr             # le même DOCTOR, traduit en français
-python -m eliza --lang auto           # suit la langue de chaque phrase (anglais / français)
-python -m eliza --version 1965        # le programme du listing de 1965, tel quel
-python -m eliza mon_script.txt --lang fr
+python -m eliza                       # DOCTOR, the March 1965 script (public domain)
+python -m eliza --lang fr             # the same DOCTOR, translated into French
+python -m eliza --lang auto           # follows the language of each sentence (English / French)
+python -m eliza --version 1965        # the program of the 1965 listing, as it was
+python -m eliza my_script.txt --lang fr
 ```
 
-Ligne vide pour quitter. `*` seul affiche la façon dont la dernière réponse a été construite.
-
-## Deux versions historiques
-
-- **`1966`** (par défaut) : le programme décrit dans l'article de *CACM*. Il gère une pile
-  de mots-clés, `NEWKEY`, `PRE` et les liens `=MOT`.
-- **`1965`** : le programme du listing retrouvé au MIT. Un seul mot-clé est retenu, il n'y a
-  ni `NEWKEY` ni `PRE`, et un lien placé dans une réponse est imprimé tel quel
-  (« = DIT »). Les mots sont comparés sur leurs 6 premiers caractères, et la ponctuation est
-  imprimée détachée. Ce mode est validé contre l'exécution du code d'origine sur CTSS.
-
-## ELIZA apprend en cours de conversation
-
-C'était prévu dès 1965 (d'où le nom d'ELIZA), puis perdu dans tous les clones :
-
-- **`* MOT ((motif) (réponse) ...)`** ajoute une règle. Exemple :
-  `* HI ((HI 0) (HELLO FROM 2))`, puis « hi freddy » donne « HELLO FROM FREDDY ».
-- **`+`** ouvre l'éditeur, qui répond `PLEASE INSTRUCT ME` :
-  - `TYPE MOT` affiche une règle ;
-  - `SUBST MOT (ancienne) (nouvelle)` remplace une réponse ;
-  - `APPEND MOT (existante) (nouvelle)` ajoute une réponse ;
-  - `ADD MOT ((motif) (réponse))` ajoute une décomposition ;
-  - `RANK MOT n` change le rang d'un mot-clé ;
-  - `DISPLA` affiche tout le script ;
-  - `START` revient à la conversation.
-- **Sauvegarde** : en fin de séance, le script modifié peut être enregistré (`Eliza.script_text()`).
+An empty line quits. `*` on its own shows how the last reply was built.
 
 ```python
 from eliza import doctor
-eliza = doctor()                                # ou doctor("fr"), doctor("auto")
+eliza = doctor()                                # or doctor("fr"), doctor("auto")
 print(eliza.hello())
 print(eliza.response("Men are all alike."))   # DID YOU THINK THEY MIGHT NOT BE ALL ALIKE
 ```
 
+## Two historical versions
+
+- **`1966`** (default): the program described in the *CACM* paper. It keeps a stack of
+  keywords and handles `NEWKEY`, `PRE` and `=WORD` links.
+- **`1965`**: the program of the listing found at MIT. It keeps a single keyword, has
+  neither `NEWKEY` nor `PRE`, and prints a link found in a reply as it is (“= DIT”). Words
+  are compared on their first 6 characters, and punctuation is printed apart. This mode is
+  checked against the original code running on CTSS.
+
+## ELIZA learns during the conversation
+
+This was there from 1965 (hence the name ELIZA, after Eliza Doolittle), then lost in every
+clone:
+
+- **`* KEYWORD ((pattern) (reply) ...)`** adds a rule. For example,
+  `* HI ((HI 0) (HELLO FROM 2))`, after which “hi freddy” gets “HELLO FROM FREDDY”.
+- **`+`** opens the editor, which answers `PLEASE INSTRUCT ME`:
+  - `TYPE KEYWORD` shows a rule;
+  - `SUBST KEYWORD (old) (new)` replaces a reply;
+  - `APPEND KEYWORD (existing) (new)` adds a reply;
+  - `ADD KEYWORD ((pattern) (reply))` adds a decomposition;
+  - `RANK KEYWORD n` changes the rank of a keyword;
+  - `DISPLA` shows the whole script;
+  - `START` goes back to the conversation.
+- **Saving**: at the end of the session, the modified script can be saved
+  (`Eliza.script_text()`).
+
 ## Scripts
 
-Le paquet n'embarque que des scripts du domaine public :
-- `doctor` : TAPE 100, retrouvé avec le code au MIT ;
-- `doctor-fr` : sa traduction française, écrite pour ce projet (CC0) ;
-- deux machines de Turing d'Anthony Hay.
+The package ships only public-domain scripts:
 
-En mode `auto`, chaque phrase est envoyée au DOCTOR de sa langue. La langue
-est reconnue par les mots fréquents, les mots-clés du script et les lettres
-accentuées ; sans indice, la conversation reste dans la langue courante.
+- `doctor`: TAPE 100, found with the code at MIT;
+- `doctor-fr`: its French translation, written for this project (CC0);
+- two Turing machines by Anthony Hay.
 
-Le DOCTOR de l'article de 1966 et sa traduction française restent
-utilisables, mais ne sont pas fournis (© ACM) :
+In `auto` mode, each sentence goes to the DOCTOR of its language. The language is
+recognised from common words, the script's keywords and accented letters; when there is
+no clue, the conversation stays in the current language.
+
+The DOCTOR of the 1966 paper and its French translation can still be used, but are not
+shipped (© ACM):
 
 ```bash
 python tools/references.py fetch
@@ -74,53 +80,64 @@ python -m eliza references/doctor_1966_cacm.txt
 python -m eliza references/doctor_fr_jeu_de_paume.txt --lang fr
 ```
 
+## In the browser
+
+`web/index.html` loads Pyodide from jsDelivr and reads the `eliza/` package next to it, so
+the root of the repository must be served over HTTP:
+
+```bash
+python -m http.server 8765 --bind 127.0.0.1
+```
+
+then open <http://127.0.0.1:8765/web/>. The page is in English or French (detected from the
+browser) and offers:
+
+- **settings** (gear icon): the script, the language of the conversation (or automatic
+  detection), the version of the program (1965 or 1966) and the display. The DOCTOR of the
+  1966 paper (© ACM) is offered there by reading it on demand from Anthony Hay's
+  repository, without redistributing it;
+- a **teletype** display: continuous paper, 80 columns and the `INPUT` prompt as on CTSS,
+  printed at 14.8 characters a second like the IBM 2741, or instantly;
+- the **how it works** panel: click any reply to see, step by step, the reading of the
+  sentence and the `LIMIT` counter, the keywords and substitutions, the numbered
+  decomposition, the reassembly and the memory queue;
+- the **historical conversations** (book icon), replayed in the conversation itself, with
+  what the archive gave instead noted under the replies that differ; you can then go on
+  talking to that ELIZA. Their texts are downloaded on demand from Anthony Hay's and
+  Rupert Lane's repositories, without being redistributed;
+- **teaching** (`*`, `+`) and downloading the modified script;
+- a **new conversation** icon.
+
 ## Tests
 
 ```bash
-python tools/references.py oracle     # références + compilation de eliza.cpp (g++)
+python tools/references.py oracle     # references + build of eliza.cpp (g++)
 python -m pytest
 ```
 
-### Sous Pyodide (WebAssembly)
+### Under Pyodide (WebAssembly)
 
-La même suite de tests tourne dans Pyodide 314.0.7 (Python 3.14) sous Node.js.
-Pyodide ne peut pas lancer l'oracle C++ : les réponses attendues sont donc
-enregistrées au préalable sur la machine hôte.
+The same test suite runs in Pyodide 314.0.7 (Python 3.14) under Node.js. Pyodide cannot
+run the C++ oracle, so the expected replies are recorded beforehand on the host machine.
 
 ```bash
-python tools/references.py golden     # enregistre references/golden.json
+python tools/references.py golden     # records references/golden.json
 cd tools/pyodide && npm install && npm test
 ```
 
-### Dans le navigateur
+## Credits
 
-`web/index.html` charge Pyodide depuis jsDelivr et lit le paquet `eliza/` à
-côté. Il faut donc servir la racine du dépôt en HTTP :
-
-```bash
-python -m http.server 8765
-```
-
-puis ouvrir <http://localhost:8765/web/>. La page propose :
-
-- le choix du script, de la langue (ou détection automatique) et de la version (1965 ou 1966) ;
-  le DOCTOR de l'article de 1966 (© ACM) y est proposé en le lisant à la demande depuis le
-  dépôt d'Anthony Hay, sans être redistribué ;
-- le panneau **fonctionnement**, qui montre pas à pas la lecture et le compteur `LIMIT`,
-  les mots-clés et substitutions, la décomposition numérotée, le réassemblage et la file
-  de mémoire ;
-- une présentation **télétype** : papier en continu, 80 colonnes et invite `INPUT` comme
-  sur CTSS, impression à 14,8 caractères par seconde comme l'IBM 2741 ;
-- l'apprentissage (`*`, `+`) et le téléchargement du script modifié ;
-- les **conversations historiques** (icône de livre), rejouées dans la conversation elle-même,
-  avec sous chaque réponse ce que l'archive donnait d'autre ; on peut ensuite continuer à
-  parler à cette ELIZA. Leurs textes sont
-  téléchargés à la demande depuis les dépôts d'Anthony Hay et de Rupert Lane, sans être
-  redistribués.
+- Joseph Weizenbaum, for ELIZA and the DOCTOR script.
+- Jeff Shrager and the [ELIZAGEN](https://elizagen.org/) team, who found the original code
+  and gathered its history.
+- Anthony Hay, for `eliza.cpp`, the scripts and the conversations collected in
+  [anthay/ELIZA](https://github.com/anthay/ELIZA).
+- Rupert Lane, for running the original code on CTSS in
+  [rupertl/eliza-ctss](https://github.com/rupertl/eliza-ctss).
 
 ## Licence
 
-- Le code est sous [MIT](LICENSE).
-- Les scripts de `eliza/scripts/` sont dans le domaine public (CC0 1.0) : TAPE 100 vient du listing
-  MIT de Weizenbaum (CC0, succession Weizenbaum), sa traduction française a été écrite pour ce projet,
-  et les machines de Turing sont d'Anthony Hay (CC0).
+- The code is under the [MIT](LICENSE) licence.
+- The scripts in `eliza/scripts/` are in the public domain (CC0 1.0): TAPE 100 comes from
+  Weizenbaum's MIT listing (CC0, Weizenbaum estate), its French translation was written for
+  this project, and the Turing machines are by Anthony Hay (CC0).
