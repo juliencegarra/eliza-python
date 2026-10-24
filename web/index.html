@@ -7,38 +7,94 @@
 <style>
   :root {
     --bg: #f6f4ef; --paper: #fffdf8; --ink: #1f1d1a; --muted: #6b665d;
-    --line: #d9d3c7; --accent: #2f5d50; --eliza: #2f5d50; --user: #1f1d1a;
+    --line: #d9d3c7; --accent: #2f5d50; --accent-soft: #e3eee9; --warn: #9a5b13;
+    --ok: #2f6b3a; --bad: #a33a2b; --chip: #efebe2;
+    --tty-paper: #f3ecd8; --tty-ink: #2b2a27; --tty-hole: #e2d9c1;
     --mono: "Courier New", ui-monospace, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #171614; --paper: #201e1b; --ink: #ece7dc; --muted: #a39d91;
-      --line: #3a3631; --accent: #8fc2b0; --eliza: #8fc2b0; --user: #ece7dc;
+      --line: #3a3631; --accent: #8fc2b0; --accent-soft: #23332d; --warn: #e0a85c;
+      --ok: #8fcf98; --bad: #f08f7f; --chip: #2a2723;
+      --tty-paper: #e9e1c9; --tty-ink: #24231f; --tty-hole: #d3c8aa;
     }
+  }
+  :root[data-theme="dark"] {
+    --bg: #171614; --paper: #201e1b; --ink: #ece7dc; --muted: #a39d91;
+    --line: #3a3631; --accent: #8fc2b0; --accent-soft: #23332d; --warn: #e0a85c;
+    --ok: #8fcf98; --bad: #f08f7f; --chip: #2a2723;
+    --tty-paper: #e9e1c9; --tty-ink: #24231f; --tty-hole: #d3c8aa;
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--ink);
          font: 16px/1.5 system-ui, sans-serif; }
-  main { max-width: 760px; margin: 0 auto; padding: 24px 16px 40px; }
+  main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 40px; }
   h1 { font-size: 1.4rem; margin: 0 0 4px; }
   .sub { color: var(--muted); margin: 0 0 16px; font-size: .9rem; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
+  .tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+                 background: none; padding: 8px 12px; color: var(--muted); }
+  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
   .bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
          margin-bottom: 12px; font-size: .9rem; }
   select, input, button { font: inherit; color: inherit; background: var(--paper);
-         border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; }
+         border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; max-width: 100%; }
   button { cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
+  #detected, .hint { color: var(--muted); }
+  .hint { font-size: .85rem; margin-top: 6px; }
+  .hint code { font-family: var(--mono); background: var(--chip); padding: 0 4px; border-radius: 4px; }
+  .layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 980px) {
+    .layout.with-steps { grid-template-columns: minmax(0, 1fr) 380px; }
+  }
   #log { background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
-         padding: 16px; height: 55vh; min-height: 260px; overflow-y: auto;
-         font-family: var(--mono); font-size: .95rem; white-space: pre-wrap; }
-  .eliza { color: var(--eliza); margin: 0 0 12px; }
-  .user { color: var(--user); margin: 0 0 4px; }
+         padding: 16px; height: 58vh; min-height: 280px; overflow-y: auto;
+         font-family: var(--mono); font-size: .95rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+  #log p { margin: 0 0 12px; }
+  .eliza { color: var(--accent); }
   .user::before { content: "> "; color: var(--muted); }
-  .trace { color: var(--muted); font-size: .8rem; margin: 0 0 12px; }
+  .note { color: var(--muted); font-size: .85rem; }
+  /* teletype: continuous paper, 80 columns, the 1965 INPUT prompt */
+  #log.tty { background: var(--tty-paper); color: var(--tty-ink); border-radius: 2px;
+             border-left: 14px dotted var(--tty-hole); border-right: 14px dotted var(--tty-hole);
+             font-size: .9rem; line-height: 1.35; }
+  #log.tty p { margin: 0; }
+  #log.tty .eliza, #log.tty .user { color: var(--tty-ink); }
+  #log.tty .user::before { content: ""; }
+  #log.tty .blank { height: 1.35em; }
+  #log.tty .cursor::after { content: "\2588"; animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
   form { display: flex; gap: 8px; margin-top: 12px; }
   #say { flex: 1; min-width: 0; font-family: var(--mono); }
   #status { color: var(--muted); font-size: .85rem; margin-top: 8px; }
-  #detected { color: var(--muted); }
+  /* how the reply was made */
+  #steps { display: none; align-content: start; gap: 10px; }
+  .with-steps #steps { display: grid; }
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+  .card h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
+             margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; }
+  .mono { font-family: var(--mono); font-size: .85rem; overflow-wrap: anywhere; }
+  .chips { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; }
+  .chip { font-family: var(--mono); font-size: .8rem; background: var(--chip); border-radius: 4px; padding: 1px 6px; }
+  .chip.top { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+  .chip.gone { color: var(--muted); }
+  .parts { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; font-family: var(--mono); font-size: .82rem; margin: 4px 0; }
+  .parts .n { color: var(--muted); text-align: right; }
+  .limit { display: inline-flex; gap: 3px; }
+  .limit i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid var(--muted); }
+  .limit i.on { background: var(--accent); border-color: var(--accent); }
+  .badge { font-size: .75rem; border-radius: 10px; padding: 0 8px; background: var(--chip); color: var(--ink);
+           text-transform: none; letter-spacing: 0; }
+  .empty { color: var(--muted); font-size: .85rem; }
+  /* archives */
+  #archives { display: none; }
+  table { border-collapse: collapse; width: 100%; font-size: .85rem; }
+  th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 6px 8px; }
+  .yes { color: var(--ok); } .no { color: var(--bad); }
+  .hist { color: var(--warn); }
+  .tablewrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
 </style>
 </head>
 <body>
@@ -46,125 +102,455 @@
   <h1>ELIZA (Weizenbaum, 1966)</h1>
   <p class="sub">Portage Python fidèle, exécuté dans le navigateur par Pyodide.<br>Contact : Julien.Cegarra@univ-jfc.fr</p>
 
-  <div class="bar">
-    <label>Script
-      <select id="script">
-        <option value="doctor">DOCTOR (mars 1965, anglais ou français)</option>
-        <option value="palindrome">Machine de Turing : palindrome</option>
-        <option value="equal-number">Machine de Turing : autant de A que de B</option>
-        <option value="file">Fichier de script…</option>
-      </select>
-    </label>
-    <label>Langue
-      <select id="lang">
-        <option value="auto">automatique</option>
-        <option value="en">anglais</option>
-        <option value="fr">français</option>
-      </select>
-    </label>
-    <span id="detected"></span>
-    <label><input type="checkbox" id="trace"> trace</label>
-    <input type="file" id="file" accept=".txt" hidden>
+  <div class="tabs" role="tablist">
+    <button id="tab-chat" role="tab" aria-selected="true">Converser</button>
+    <button id="tab-archives" role="tab" aria-selected="false">Archives</button>
   </div>
 
-  <div id="log" aria-live="polite"></div>
-  <form id="form">
-    <input id="say" autocomplete="off" placeholder="Chargement de Pyodide…" disabled>
-    <button id="send" disabled>Envoyer</button>
-  </form>
+  <section id="chat">
+    <div class="bar">
+      <label>Script
+        <select id="script">
+          <option value="doctor">DOCTOR (mars 1965, anglais ou français)</option>
+          <option value="palindrome">Machine de Turing : palindrome</option>
+          <option value="equal-number">Machine de Turing : autant de A que de B</option>
+          <option value="file">Fichier de script…</option>
+        </select>
+      </label>
+      <label>Langue
+        <select id="lang">
+          <option value="auto">automatique</option>
+          <option value="en">anglais</option>
+          <option value="fr">français</option>
+        </select>
+      </label>
+      <span id="detected"></span>
+      <label>Version
+        <select id="version">
+          <option value="1966">1966 (article CACM)</option>
+          <option value="1965">1965 (listing retrouvé)</option>
+        </select>
+      </label>
+      <label>Présentation
+        <select id="look">
+          <option value="modern">moderne</option>
+          <option value="tty">télétype IBM 2741 (14,8 car./s)</option>
+          <option value="tty-fast">télétype, impression immédiate</option>
+        </select>
+      </label>
+      <label><input type="checkbox" id="explain"> fonctionnement</label>
+      <button id="save" hidden>Télécharger le script modifié</button>
+      <input type="file" id="file" accept=".txt" hidden>
+    </div>
+
+    <div class="layout" id="layout">
+      <div>
+        <div id="log" aria-live="polite"></div>
+        <form id="form">
+          <input id="say" autocomplete="off" placeholder="Chargement de Pyodide…" disabled>
+          <button id="send" disabled>Envoyer</button>
+        </form>
+        <div class="hint">Comme en 1965, ELIZA peut apprendre : <code>* HI ((HI 0) (HELLO FROM 2))</code>
+          ajoute une règle, <code>+</code> ouvre l'éditeur (TYPE, SUBST, APPEND, ADD, RANK, DISPLA, START).</div>
+      </div>
+      <aside id="steps" aria-label="Comment la réponse a été construite"></aside>
+    </div>
+  </section>
+
+  <section id="archives">
+    <div class="bar">
+      <label>Conversation <select id="record"></select></label>
+      <button id="replay" disabled>Rejouer</button>
+    </div>
+    <p id="record-note" class="note"></p>
+    <div id="replay-out"></div>
+  </section>
+
   <div id="status">Chargement…</div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
 <script>
 // The package is read from ../eliza/ (serve the repository root over HTTP).
-const FILES = ["__init__.py", "engine.py", "hollerith.py", "languages.py", "match.py",
+const FILES = ["__init__.py", "engine.py", "history.py", "hollerith.py", "languages.py", "match.py",
                "multilingual.py", "script.py", "text.py",
                "scripts/doctor_1965_tape100.txt", "scripts/doctor_fr.txt",
                "scripts/turing_palindrome.txt", "scripts/turing_equal_number.txt"];
 // language of the browser, used by the automatic mode until the user has spoken
 const BROWSER_LANG = (navigator.language || "en").slice(0, 2).toLowerCase();
+const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const el = (id) => document.getElementById(id);
-let py, session, scriptText = null;
+let py, scriptText = null, lastScript = "doctor", printing = Promise.resolve(), generation = 0;
+let RECORDS = [], SOURCES = {};
+const sources = {};  // archive texts already fetched
 
-function show(cls, text) {
+// Python side: every call returns a string (JSON), so the page keeps no PyProxy
+const API = `
+import json
+from eliza import Conversation, Eliza, builtin_script, doctor, history, languages, parse
+
+SESSION = None
+
+def _language(s):
+    return s.language if isinstance(s, Conversation) else s.language.code
+
+def _current(s):
+    return s.current if isinstance(s, Conversation) else s
+
+def api_start(name, text, lang, version, browser_lang):
+    # the DOCTOR follows the chosen language (or the user's, in automatic mode);
+    # another script keeps its own language and only takes the profile
+    global SESSION
+    if text is None and name == "doctor":
+        s = doctor(lang, start=browser_lang, version=version)
+    else:
+        script = parse(text) if text is not None else builtin_script(name)
+        code = script.metadata.get("language", "en") if lang == "auto" else lang
+        s = Eliza(script, languages.get(code), version=version)
+    SESSION = s
+    return json.dumps(dict(hello=s.hello(), language=_language(s)))
+
+def api_respond(text):
+    s = SESSION
+    reply = s.response(text)
+    sessions = s.sessions.values() if isinstance(s, Conversation) else [s]
+    return json.dumps(dict(reply=reply, steps=s.trace.steps, language=_language(s),
+                           modified=any(e.modified for e in sessions)))
+
+def api_script():
+    return _current(SESSION).script_text()
+
+def api_records():
+    return json.dumps(dict(sources=history.SOURCES, records=[
+        dict(key=k, title=r.title, year=r.year, note=r.note, needed=history.needed(r),
+             version=r.version) for k, r in history.CONVERSATIONS.items()]))
+
+def api_replay(key, texts_json):
+    texts = json.loads(texts_json)
+    record = history.CONVERSATIONS[key]
+    return json.dumps(history.replay(history.session(record, texts),
+                                     history.exchanges(record, texts)))
+`;
+
+function call(fn, ...args) {
+  // strings cross over to Python without proxies; undefined (not null) becomes None
+  args.forEach((a, i) => py.globals.set(`_arg${i}`, a === null ? undefined : a));
+  const out = py.runPython(`${fn}(${args.map((_, i) => `_arg${i}`).join(", ")})`);
+  return fn === "api_script" ? out : JSON.parse(out);
+}
+
+// ---------------------------------------------------------------- display
+
+const tty = () => el("look").value !== "modern";
+
+function wrap80(text) {
+  // the teletype printed at most 80 characters a line, cut between words
+  const lines = [];
+  for (const row of text.split("\n")) {
+    let line = "";
+    for (const word of row.split(" ")) {
+      if (line && (line + " " + word).length > 80) { lines.push(line); line = word; }
+      else line = line ? line + " " + word : word;
+    }
+    lines.push(line);
+  }
+  return lines;
+}
+
+function scrollDown() { el("log").scrollTop = el("log").scrollHeight; }
+
+function add(cls, text) {
   const p = document.createElement("p");
   p.className = cls;
   p.textContent = text;
   el("log").append(p);
-  el("log").scrollTop = el("log").scrollHeight;
+  scrollDown();
+  return p;
 }
 
-// the DOCTOR follows the chosen language (or the user's, in automatic mode);
-// another script keeps its own language and only takes the profile
-// (delimiters, built-in messages) of the chosen one
-const START = `
-from eliza import Conversation, Eliza, builtin_script, doctor, languages, parse
+async function typeOut(text, gen) {
+  // the IBM 2741 printed about 14.8 characters a second
+  const slow = el("look").value === "tty" && !REDUCED_MOTION;
+  for (const line of wrap80(text)) {
+    if (gen !== generation) return;
+    const p = add("eliza", "");
+    if (!slow) { p.textContent = line; continue; }
+    p.classList.add("cursor");
+    for (const ch of line) {
+      if (gen !== generation) return;
+      p.textContent += ch;
+      scrollDown();
+      await new Promise((r) => setTimeout(r, 1000 / 14.8));
+    }
+    p.classList.remove("cursor");
+  }
+}
 
-def start(script_name, script_text, lang, browser_lang):
-    if script_text is None and script_name == "doctor":
-        return doctor(lang, start=browser_lang)
-    script = parse(script_text) if script_text is not None else builtin_script(script_name)
-    code = script.metadata.get("language", "en") if lang == "auto" else lang
-    return Eliza(script, languages.get(code))
+function tidy(text) {
+  // display only: the engine keeps blank words (a « quote » becomes a space), as eliza.cpp does
+  return text.split("\n").map((row) => row.replace(/(\S) {2,}(?=\S)/g, "$1 ").trimEnd()).join("\n");
+}
 
-def language_of(session):
-    return session.language if isinstance(session, Conversation) else session.language.code
-`;
+function showEliza(text) {
+  const gen = generation;
+  if (!tty()) {
+    if (text) add("eliza", tidy(text));
+    return Promise.resolve();
+  }
+  printing = printing.then(async () => {
+    if (gen !== generation) return;
+    if (text) await typeOut(tidy(text), gen);
+    if (gen === generation) add("eliza", "INPUT");
+  });
+  return printing;
+}
 
-function showLanguage() {
-  const code = py.globals.get("language_of")(session);
+function showUser(text) {
+  if (!tty()) { add("user", text); return; }
+  const gen = generation;
+  printing = printing.then(() => { if (gen === generation) { add("user", text); add("blank", ""); } });
+}
+
+function showLanguage(code) {
   el("detected").textContent = el("lang").value === "auto" ? `(${code === "fr" ? "français" : "anglais"})` : "";
 }
 
+// ---------------------------------------------------------------- how the reply was made
+
+const SOURCE = { rule: "règle du script", memory: "mémoire rappelée", none: "règle NONE",
+                 nomatch: "message intégré", command: "apprentissage" };
+
+function node(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text !== undefined) n.textContent = text;
+  return n;
+}
+
+function card(title, extra, ...body) {
+  const c = node("div", "card");
+  const h = node("h3", "", title);
+  if (extra) h.append(typeof extra === "string" ? node("span", "", extra) : extra);
+  c.append(h, ...body);
+  return c;
+}
+
+function chips(items) {
+  const d = node("div", "chips");
+  for (const [text, cls] of items) d.append(node("span", "chip " + (cls || ""), text));
+  return d;
+}
+
+function renderSteps(steps) {
+  const box = el("steps");
+  box.textContent = "";
+  if (!steps || !steps.input) {
+    box.append(node("p", "empty", steps && steps.source === "command"
+      ? "Commande d'apprentissage : le script a été lu ou modifié, sans conversation."
+      : "Écrivez une phrase pour voir comment ELIZA construit sa réponse."));
+    return;
+  }
+  // 1. reading: the words, the clauses discarded, LIMIT
+  const limit = node("span", "limit");
+  for (let i = 1; i <= 4; i++) limit.append(node("i", i <= steps.limit ? "on" : ""));
+  limit.title = `LIMIT = ${steps.limit}`;
+  box.append(card("1. Lecture", limit, chips(steps.input.map((w) => [w])),
+    ...steps.discarded.map((d) => node("div", "note", `écarté avant (pas de mot-clé) : ${d}`)),
+    ...(steps.cut ? [node("div", "note", `coupé après le délimiteur : ${steps.cut}`)] : []),
+    node("div", "note", `LIMIT = ${steps.limit} : une mémoire n'est rappelée que lorsqu'il vaut 4.`)));
+
+  // 2. keywords and substitutions
+  const top = steps.keystack[0];
+  box.append(card("2. Mots-clés", steps.version === "1965" ? "1965 : un seul retenu" : "",
+    steps.keywords.length
+      ? chips(steps.keywords.map((k) => [
+          k.word + (k.precedence ? ` (rang ${k.precedence})` : "") + (k.substitute ? ` → ${k.substitute}` : ""),
+          k.word === top ? "top" : (k.transformation ? "" : "gone")]))
+      : node("div", "empty", "aucun mot-clé"),
+    node("div", "mono", steps.clause),
+    ...(steps.keystack.length ? [node("div", "note", "pile : " + steps.keystack.join(" · "))] : [])));
+
+  // 3. decomposition and reassembly of each rule tried
+  steps.rules.forEach((r) => {
+    const body = [node("div", "note", `texte : ${r.words || "∅"}`)];
+    if (r.decomposition === null) {
+      body.push(node("div", "empty", r.action === "link" ? `aucun motif ne convient, renvoi à ${r.link}`
+                                                         : "aucun motif ne convient"));
+    } else {
+      body.push(node("div", "mono", `motif (${r.decomposition})`));
+      const parts = node("div", "parts");
+      r.components.forEach((c, n) => parts.append(node("span", "n", n + 1), node("span", "", c || "∅")));
+      body.push(parts, node("div", "mono", `réponse ${r.reassembly}`));
+      if (r.output !== undefined) body.push(node("div", "mono", `→ ${r.output || "∅"}`));
+      if (r.action === "link" || r.action === "pre") body.push(node("div", "note", `renvoi à ${r.link}`));
+      if (r.action === "newkey") body.push(node("div", "note", "NEWKEY : mot-clé suivant de la pile"));
+    }
+    box.append(card(`3. Règle ${r.keyword}`, r.choice ? `réponse ${r.choice}` : "", ...body));
+  });
+
+  // 4. memory
+  const mem = [];
+  if (steps.memory_new)
+    mem.push(node("div", "mono", `+ ${steps.memory_new.text}`),
+             node("div", "note", `transformation ${steps.memory_new.index} sur 4, choisie par HASH du dernier mot « ${steps.memory_new.last_word} »`));
+  if (steps.source === "memory") mem.push(node("div", "note", "la réponse vient de la mémoire"));
+  mem.push(steps.memories.length ? chips(steps.memories.map((m) => [m])) : node("div", "empty", "file vide"));
+  box.append(card("4. Mémoire", `${steps.memories.length} en attente`, ...mem));
+  box.append(card("Réponse", node("span", "badge", SOURCE[steps.source] || steps.source),
+                  node("div", "mono", steps.reply || "∅")));
+}
+
+// ---------------------------------------------------------------- conversation
+
 function start() {
-  el("log").textContent = "";
   const name = el("script").value === "file" ? null : el("script").value;
-  // undefined, not null: Pyodide turns undefined into None but null into JsNull
-  session = py.globals.get("start")(name ?? undefined, scriptText ?? undefined, el("lang").value, BROWSER_LANG);
-  showLanguage();
-  show("eliza", session.hello());
+  const out = call("api_start", name, scriptText, el("lang").value, el("version").value, BROWSER_LANG);
+  generation += 1;  // stops what the teletype of the previous session was printing
+  printing = Promise.resolve();
+  el("log").textContent = "";
+  el("log").className = tty() ? "tty" : "";
+  el("save").hidden = true;
+  showLanguage(out.language);
+  renderSteps(null);
+  showEliza(out.hello);
   el("say").focus();
 }
+
+function restart() {
+  try { start(); }
+  catch (err) { el("status").textContent = "Erreur : " + (err.message || err); }
+}
+
+el("form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = el("say").value;
+  if (!text.trim() || !py) return;
+  el("say").value = "";
+  showUser(text);
+  let out;
+  try { out = call("api_respond", text); }
+  catch (err) { add("note", "Erreur : " + (err.message || err)); return; }
+  showLanguage(out.language);
+  renderSteps(out.steps);
+  el("save").hidden = !out.modified;
+  el("send").disabled = true;
+  await showEliza(out.reply);
+  el("send").disabled = false;
+});
+
+el("script").addEventListener("change", () => {
+  if (el("script").value === "file") { el("file").click(); return; }
+  lastScript = el("script").value;
+  scriptText = null;
+  restart();
+});
+el("file").addEventListener("cancel", () => { el("script").value = lastScript; });
+el("file").addEventListener("change", async () => {
+  const f = el("file").files[0];
+  el("file").value = "";  // the same file can be chosen again after an edit
+  if (!f) { el("script").value = lastScript; return; }
+  const previous = scriptText;
+  scriptText = await f.text();
+  try { start(); lastScript = "file"; el("status").textContent = `Script : ${f.name}`; }
+  catch (err) {
+    scriptText = previous;
+    el("script").value = lastScript;
+    el("status").textContent = `Erreur dans ${f.name} : ` + (err.message || err);
+  }
+});
+for (const id of ["lang", "version", "look"]) el(id).addEventListener("change", restart);
+el("explain").addEventListener("change", () => {
+  el("layout").classList.toggle("with-steps", el("explain").checked);
+});
+el("save").addEventListener("click", () => {
+  const blob = new Blob([call("api_script")], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "eliza-script.txt";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+// ---------------------------------------------------------------- archives
+
+function showTab(name) {
+  el("tab-chat").setAttribute("aria-selected", String(name === "chat"));
+  el("tab-archives").setAttribute("aria-selected", String(name === "archives"));
+  el("chat").style.display = name === "chat" ? "" : "none";
+  el("archives").style.display = name === "archives" ? "block" : "none";
+}
+el("tab-chat").addEventListener("click", () => showTab("chat"));
+el("tab-archives").addEventListener("click", () => showTab("archives"));
+
+function showRecordNote() {
+  const r = RECORDS.find((x) => x.key === el("record").value);
+  el("record-note").textContent = `${r.note} Programme : version ${r.version}. Les textes sont téléchargés `
+    + "à la demande depuis github.com/anthay/ELIZA et github.com/rupertl/eliza-ctss ; ils ne sont pas redistribués ici.";
+}
+el("record").addEventListener("change", showRecordNote);
+
+el("replay").addEventListener("click", async () => {
+  const r = RECORDS.find((x) => x.key === el("record").value);
+  el("replay").disabled = true;
+  el("replay-out").textContent = "";
+  try {
+    for (const key of r.needed) {
+      if (!(key in sources)) {
+        el("status").textContent = `Téléchargement de ${key}…`;
+        const resp = await fetch(SOURCES[key]);
+        if (!resp.ok) throw new Error(`${SOURCES[key]} : HTTP ${resp.status}`);
+        sources[key] = await resp.text();
+      }
+    }
+    const texts = Object.fromEntries(r.needed.map((k) => [k, sources[k]]));
+    const rows = call("api_replay", r.key, JSON.stringify(texts));
+    const same = rows.filter((x) => x.same).length;
+    const old = rows.filter((x) => x.historical).length;
+    el("status").textContent = `${r.title} : ${same} réponses sur ${rows.length} identiques à la reconstruction`
+      + (old ? ` ; le document d'époque en donnait ${old} autrement.` : ".");
+    const table = node("table");
+    const head = node("tr");
+    for (const h of ["", "Entrée", "Ce portage", "Reconstruction", "Document d'époque, si différent"])
+      head.append(node("th", "", h));
+    table.append(head);
+    for (const x of rows) {
+      const tr = node("tr");
+      tr.append(node("td", x.same ? "yes" : "no", x.same ? "✓" : "✗"), node("td", "", x.prompt),
+                node("td", "mono", x.reply), node("td", "mono", x.same ? "identique" : x.expected),
+                node("td", "mono hist", x.historical || ""));
+      table.append(tr);
+    }
+    const box = node("div", "tablewrap");
+    box.append(table);
+    el("replay-out").append(box);
+  } catch (err) {
+    el("status").textContent = "Erreur : " + (err.message || err);
+  } finally {
+    el("replay").disabled = false;
+  }
+});
+
+// ---------------------------------------------------------------- start up
 
 async function main() {
   py = await loadPyodide();
   py.FS.mkdirTree("/home/pyodide/eliza/scripts");
   for (const f of FILES) {
-    const r = await fetch("../eliza/" + f);
+    const r = await fetch("../eliza/" + f, { cache: "no-cache" });  // revalidated after an update
     if (!r.ok) throw new Error(`../eliza/${f}: HTTP ${r.status}`);
     py.FS.writeFile("/home/pyodide/eliza/" + f, new Uint8Array(await r.arrayBuffer()));
   }
-  py.runPython(START);
+  py.runPython(API);
   const info = py.runPython("import sys, eliza; f'Python {sys.version.split()[0]}, eliza {eliza.__version__}'");
   el("status").textContent = `Pyodide ${py.version}, ${info}.`;
+  ({ sources: SOURCES, records: RECORDS } = call("api_records"));
+  for (const r of RECORDS) el("record").append(new Option(`${r.year} — ${r.title}`, r.key));
+  showRecordNote();
+  el("replay").disabled = false;
   el("say").disabled = el("send").disabled = false;
   el("say").placeholder = "Parlez à ELIZA…";
   start();
 }
-
-el("form").addEventListener("submit", (e) => {
-  e.preventDefault();
-  const text = el("say").value;
-  if (!text.trim() || !session) return;
-  el("say").value = "";
-  show("user", text);
-  // tidy display only: the engine keeps blank words, as eliza.cpp does
-  show("eliza", session.response(text).split(/\s+/).filter(Boolean).join(" "));
-  if (el("trace").checked) show("trace", session.trace.text());
-  showLanguage();
-});
-el("script").addEventListener("change", () => {
-  if (el("script").value === "file") el("file").click();
-  else { scriptText = null; start(); }
-});
-el("lang").addEventListener("change", () => start());
-el("file").addEventListener("change", async () => {
-  const f = el("file").files[0];
-  if (!f) return;
-  try { scriptText = await f.text(); start(); }
-  catch (err) { show("trace", String(err.message ?? err)); }
-});
 
 main().catch((err) => { el("status").textContent = "Erreur : " + err; });
 </script>

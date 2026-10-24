@@ -33,6 +33,10 @@ class Language:
     elisions: tuple[str, ...] = ()                # prefixes split from the next word
     common_words: frozenset[str] = frozenset()    # for language detection
     letters: str = ""                             # letters typical of the language
+    # messages of the 1965 script editor (+): please instruct me, change not
+    # recognized, list not found, memory list follows
+    editor_messages: tuple[str, str, str, str] = (
+        "PLEASE INSTRUCT ME", "CHANGE NOT RECOGNIZED", "LIST NOT FOUND", "MEMORY LIST FOLLOWS")
 
     def split_elisions(self, words: list[str]) -> list[str]:
         """["J'AI", "FAIM"] -> ["J'", "AI", "FAIM"]."""
@@ -94,6 +98,8 @@ FRENCH = Language(
         BONJOUR MÈRE PÈRE SŒUR FRÈRE PEUT-ÊTRE J' L' D' M' N' C' QU' S'
     """.split()),
     letters="ÀÂÇÉÈÊËÎÏÔÛÙÜŸŒÆ",
+    editor_messages=("VEUILLEZ M'INSTRUIRE", "MODIFICATION NON RECONNUE", "LISTE INTROUVABLE",
+                     "VOICI LA LISTE DES MÉMOIRES"),
 )
 
 LANGUAGES = {lang.code: lang for lang in (ENGLISH, FRENCH)}

@@ -366,11 +366,100 @@ class _Reader:
             self.rules[keyword] = rule
 
 
+def parse_rule(text: str, rules: dict[str, KeywordRule]) -> KeywordRule:
+    """Parse one keyword rule, e.g. "(HI ((HI 0) (HELLO FROM 2)))", whose
+    references must exist in rules (or be the rule itself)."""
+    reader = _Reader(text.replace("\r\n", "\n"))
+    if not reader.read_rule() or not reader.rules or reader.memory or reader.none:
+        raise ScriptError("expected one keyword rule, e.g. (HI ((HI 0) (HELLO FROM 2)))")
+    if reader.tok.peek()[0] != _EOF:
+        raise reader.error("unexpected text after the rule")
+    (rule,) = reader.rules.values()
+    known = dict(rules, **{rule.keyword: rule})
+    for line, keyword in reader.references:
+        if keyword not in known or not known[keyword].has_transformation:
+            raise ScriptError(f"'={keyword}' referenced keyword does not exist")
+    return rule
+
+
+def parse_items(text: str) -> list:
+    """Parse words and (nested) lists: "SUBST I (A B) ((0) (C))" ->
+    ["SUBST", "I", ["A", "B"], [["0"], ["C"]]]."""
+    tok = _Tokenizer(text)
+
+    def items(closing: bool) -> list:
+        out = []
+        while True:
+            t = tok.next()
+            if t[0] == _EOF:
+                if closing:
+                    raise ScriptError("missing ')'")
+                return out
+            if t[0] == _CLOSE:
+                if not closing:
+                    raise ScriptError("unexpected ')'")
+                return out
+            out.append(items(True) if t[0] == _OPEN else t[1])
+    return items(False)
+
+
+# --------------------------------------------------------------------------
+# writing a script back as text (DISPLA, TYPE, and saving a taught script)
+
+def reassembly_text(r: Reassembly) -> str:
+    if r.kind == "link":
+        return f"(={r.keyword})"
+    if r.kind == "newkey":
+        return "(NEWKEY)"
+    if r.kind == "pre":
+        return f"(PRE ({' '.join(r.words)}) (={r.keyword}))"
+    return "(" + " ".join(r.words) + ")"
+
+
+def rule_text(rule: KeywordRule, name: str = "") -> str:
+    head = name or rule.keyword
+    if rule.substitute:
+        head += " = " + rule.substitute
+    if rule.tags:
+        head += " DLIST(" + " ".join(rule.tags) + ")"
+    if rule.precedence:
+        head += f" {rule.precedence}"
+    lines = ["(" + head]
+    for t in rule.transformations:
+        lines.append("    ((" + " ".join(t.decomposition) + ")")
+        lines.extend("        " + reassembly_text(r) for r in t.reassemblies)
+        lines[-1] += ")"
+    if rule.link:
+        lines.append(f"    (={rule.link})")
+    lines[-1] += ")"
+    return "\n".join(lines)
+
+
+def memory_text(memory: MemoryRule) -> str:
+    lines = [f"(MEMORY {memory.keyword}"]
+    lines.extend(f"    ({' '.join(d)} = {' '.join(r)})" for d, r in memory.transformations)
+    lines[-1] += ")"
+    return "\n".join(lines)
+
+
+def to_text(script: Script) -> str:
+    """The script in the format read by parse() (and by eliza.cpp)."""
+    parts = [f"; eliza-{k}: {v}" for k, v in script.metadata.items()]
+    parts.append("(" + " ".join(script.hello) + ")")
+    parts.append("START")
+    parts.extend(rule_text(r) for r in script.rules.values())
+    parts.append(memory_text(script.memory))
+    parts.append(rule_text(script.none, "NONE"))
+    parts.append("()")
+    return "\n\n".join(parts) + "\n"
+
+
 def parse(text: str) -> Script:
     """Parse the text of an ELIZA script."""
     if text.startswith("﻿"):
         text = text[1:]
-    script = _Reader(text.replace("\r\n", "\n").replace("\r", "\n")).read()
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    script = _Reader(text).read()
     script.metadata = {k.lower(): v for k, v in _PRAGMA.findall(text)}
     return script
 

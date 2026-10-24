@@ -40,11 +40,15 @@ def last_chunk_as_bcd(word: str) -> int:
     scripts in other languages pick the same MEMORY rules in both programs.
     e.g. "HERE" -> 0o302551256060, "INVENTED" -> "ED    " -> 0o252460606060
     """
-    data = word.encode("utf-8")
+    data = word.encode("utf-8", "surrogatepass")  # lone surrogates must not crash
     start = ((len(data) - 1) // CELL_CHARS) * CELL_CHARS if data else 0
-    chunk = data[start:].ljust(CELL_CHARS, b" ")
+    return cell_as_bcd(data[start:])
+
+
+def cell_as_bcd(cell: bytes) -> int:
+    """The 36-bit BCD datum of one SLIP cell (up to 6 bytes, space padded)."""
     datum = 0
-    for b in chunk:
+    for b in cell[:CELL_CHARS].ljust(CELL_CHARS, b" "):
         datum = (datum << 6) | _BYTE_TO_BCD[b]
     return datum
 

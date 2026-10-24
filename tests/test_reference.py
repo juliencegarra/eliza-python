@@ -11,7 +11,7 @@ import re
 
 import pytest
 
-from eliza import Eliza, ScriptError, builtin_script, load
+from eliza import Eliza, ScriptError, builtin_script, history, load
 from eliza.languages import ENGLISH
 from eliza.script import parse
 
@@ -81,7 +81,7 @@ def test_same_replies_as_eliza_cpp(case):
     inputs, hello, expected = oracle_replies(case)
     assert len(expected) == len(inputs)
     # eliza.cpp knows no language profile: compare with the historical one
-    eliza = Eliza(load(case_inputs(case)[0]), ENGLISH)
+    eliza = Eliza(load(case_inputs(case)[0]), ENGLISH, teaching=False)
     assert eliza.hello() == hello
     for prompt, reply in zip(inputs, expected):
         assert eliza.response(prompt) == reply, prompt
@@ -92,3 +92,13 @@ def test_parse_errors_like_eliza_cpp():
         parse("(HELLO) (MEMORY X (0 = A)(0 = B)(0 = C)(0 = D)) (X ((0) (Y)))")
     with pytest.raises(ScriptError, match="out of range"):
         parse("(HELLO) (X ((0 X) (3))) (NONE ((0) (OK)))")
+
+
+@pytest.mark.parametrize("key", history.CONVERSATIONS)
+def test_historical_conversations_replay(key):
+    """Every conversation of eliza.history gives the recorded replies."""
+    record = history.CONVERSATIONS[key]
+    texts = {name: reference(name).read_text(encoding="utf-8") for name in history.needed(record)}
+    rows = history.replay(history.session(record, texts), history.exchanges(record, texts))
+    assert len(rows) >= 4
+    assert [r["reply"] for r in rows] == [r["expected"] for r in rows]

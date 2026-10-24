@@ -36,10 +36,15 @@ def inlist(word: str, wordlist: str, tags: TagMap) -> bool:
     if s.startswith("*"):
         choices = split(s[1:])
         if list(tags.get(SIX_CHAR_MATCHING_TAG, ())) == [SIX_CHAR_MATCHING_TAG]:
-            # the first six characters of word compared with every
-            # six-character chunk of each choice (WONDER matches WONDERFUL)
-            word6 = word[:6]
-            return any(w[i:i + 6] == word6 for w in choices for i in range(0, len(w), 6))
+            # the first SLIP cell of word compared with every cell of each
+            # choice (WONDER matches WONDERFUL); cells are 6 characters, here
+            # 6 UTF-8 bytes as in eliza.cpp
+            word6 = word.encode("utf-8", "surrogatepass")[:6]
+            for choice in choices:
+                data = choice.encode("utf-8", "surrogatepass")
+                if any(data[i:i + 6] == word6 for i in range(0, len(data), 6)):
+                    return True
+            return False
         return word in choices
     if s.startswith("/"):
         return any(word in tags.get(tag, ()) for tag in split(s[1:]))

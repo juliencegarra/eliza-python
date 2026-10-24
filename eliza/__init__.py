@@ -35,13 +35,16 @@ BUILTIN_SCRIPTS = {
 DOCTORS = {"en": "doctor", "fr": "doctor-fr"}
 
 
-def doctor(language: str = "en", start: str = "en") -> Eliza | Conversation:
+def doctor(language: str = "en", start: str = "en", **options) -> Eliza | Conversation:
     """The DOCTOR script in the given language, or in all of them with "auto"
-    (the conversation then starts in `start` and follows the user's language)."""
+    (the conversation then starts in `start` and follows the user's language).
+    options are those of Eliza, e.g. version="1965"."""
     if language == "auto":
         start = start if start in DOCTORS else "en"
-        return Conversation({code: doctor(code) for code in DOCTORS}, start)
-    return Eliza(builtin_script(DOCTORS[language]), languages.get(language))
+        return Conversation({code: doctor(code, **options) for code in DOCTORS}, start)
+    if language not in DOCTORS:
+        raise ValueError(f"no DOCTOR in '{language}'; known: {', '.join(DOCTORS)}, auto")
+    return Eliza(builtin_script(DOCTORS[language]), languages.get(language), **options)
 
 
 def builtin_script(name: str) -> Script:

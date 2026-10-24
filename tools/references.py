@@ -39,6 +39,8 @@ FILES = {
     "doctor_1965_tape102.txt": HAY + "scripts/ELIZA-script-02-000311051-1965-03-06-TAPE-102.txt",
     "yapyap_modified.txt": HAY + "scripts/ELIZA-script-YAPYAP-modified-for-1966-CACM-ELIZA.txt",
     "ctss_running_eliza.txt": CTSS + "etc/running-eliza.txt",
+    # the CACM script as adapted by Rupert Lane for the 1965 code (script 200)
+    "ctss_tape200.txt": CTSS + "eliza/src/ELIZA/tape.200",
 }
 
 ORACLE = REFS / ("eliza_oracle.exe" if sys.platform == "win32" else "eliza_oracle")
