@@ -414,6 +414,7 @@ function t(key, ...args) {
 }
 
 let status = () => t("loading");  // redrawn when the language changes
+let ready = () => t("loading");  // the status of a fresh conversation
 function setStatus(fn) { status = fn; el("status").textContent = fn(); }
 
 const recordTitle = (r) => (UI === "fr" && r.title_fr) || r.title;
@@ -731,6 +732,7 @@ function start() {
   const lang = choice === "cacm" ? "en" : el("lang").value;  // the 1966 script is in English only
   const out = call("api_start", name, scriptText, lang, el("version").value, UI);
   archive = null;
+  setStatus(ready);  // what the previous conversation reported no longer applies
   clearLog();
   showLanguage(out.language);
   showSummary();
@@ -879,7 +881,8 @@ async function main() {
   }
   py.runPython(API);
   const info = py.runPython("import sys, eliza; f'Python {sys.version.split()[0]}, eliza {eliza.__version__}'");
-  setStatus(() => t("ready", py.version, info));
+  ready = () => t("ready", py.version, info);
+  setStatus(ready);
   ({ sources: SOURCES, records: RECORDS } = call("api_records"));
   for (const r of RECORDS) el("record").append(new Option("", r.key));
   el("replay").disabled = false;
