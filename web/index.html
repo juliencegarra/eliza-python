@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -32,21 +32,55 @@
   main { max-width: 1180px; margin: 0 auto; padding: 24px 16px 40px; }
   h1 { font-size: 1.4rem; margin: 0 0 4px; }
   .sub { color: var(--muted); margin: 0 0 16px; font-size: .9rem; }
-  .tabs { display: flex; gap: 4px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
-  .tabs button { border: 0; border-bottom: 2px solid transparent; border-radius: 0;
-                 background: none; padding: 8px 12px; color: var(--muted); }
-  .tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--accent); }
+  .about { background: var(--paper); border: 1px solid var(--line); border-left: 4px solid var(--accent);
+           border-radius: 6px; padding: 10px 14px; margin: 0 0 16px; font-size: .9rem; }
+  .about p { margin: 0; }
+  .about a { color: var(--accent); }
+  .about p + p { margin-top: 6px; }
+  .head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; }
+  .uilang { display: flex; gap: 4px; font-size: .85rem; }
+  .uilang button { padding: 2px 8px; color: var(--muted); }
+  .uilang button[aria-pressed="true"] { color: var(--ink); border-color: var(--accent); }
   .bar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center;
          margin-bottom: 12px; font-size: .9rem; }
   select, input, button { font: inherit; color: inherit; background: var(--paper);
          border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; max-width: 100%; }
   button { cursor: pointer; }
   button:disabled { opacity: .5; cursor: default; }
-  #detected, .hint { color: var(--muted); }
+  #detected, #summary, .hint { color: var(--muted); }
+  #summary { font-size: .85rem; }
+  .icon { display: inline-flex; align-items: center; justify-content: center; padding: 6px; line-height: 0; }
+  .icon:hover, .icon:focus-visible { color: var(--accent); border-color: var(--accent); }
+  /* settings */
+  dialog { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
+           padding: 0; width: min(440px, calc(100vw - 32px)); }
+  dialog form { display: block; margin: 0; padding: 18px 20px; }  /* the dialog itself is only the edge: a click there closes it */
+  dialog::backdrop { background: rgb(0 0 0 / .35); }
+  dialog h2 { font-size: 1.05rem; margin: 0 0 12px; }
+  dialog form > label { display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; margin-bottom: 12px; font-size: .9rem; }
+  dialog select { width: 100%; }  /* long titles must not push the select past the edge */
+  dialog form > label.check { display: flex; align-items: center; gap: 8px; }
+  dialog .note { margin: 4px 0 12px; }
+  .info { border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; margin-bottom: 12px; font-size: .9rem; }
+  .info summary { cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .info .i { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px;
+             border: 1.5px solid currentColor; border-radius: 50%; font: italic 600 .75rem/1 Georgia, serif;
+             color: var(--accent); }
+  .info .hint { margin: 8px 0 2px; }
+  dialog .actions { display: flex; justify-content: flex-end; gap: 8px; }
+  .primary { background: var(--accent); border-color: var(--accent); color: var(--paper); }
+  #log .note { font-family: system-ui, sans-serif; }
+  #log .note.diff { color: var(--warn); }
   .hint { font-size: .85rem; margin-top: 6px; }
   .hint code { font-family: var(--mono); background: var(--chip); padding: 0 4px; border-radius: 4px; }
   .layout { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr); }
-  @media (min-width: 980px) {
+  @media (min-width: 760px) {
+    .layout.with-steps { grid-template-columns: minmax(0, 1fr) 320px; }
+    /* as tall as the conversation, scrolled on its own: height 0 keeps it from
+       stretching the row, min-height 100% fills the row the conversation sets */
+    .with-steps #steps { height: 0; min-height: 100%; overflow-y: auto; padding-right: 2px; }
+  }
+  @media (min-width: 1100px) {
     .layout.with-steps { grid-template-columns: minmax(0, 1fr) 380px; }
   }
   #log { background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
@@ -72,6 +106,9 @@
   /* how the reply was made */
   #steps { display: none; align-content: start; gap: 10px; }
   .with-steps #steps { display: grid; }
+  .with-steps #log p.explained { cursor: pointer; }
+  .with-steps #log p.explained:hover { text-decoration: underline dotted; }
+  .with-steps #log p.shown { background: rgb(47 93 80 / .14); box-shadow: -4px 0 0 rgb(47 93 80 / .14); }
   .card { background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
   .card h3 { font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted);
              margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; }
@@ -88,85 +125,121 @@
   .badge { font-size: .75rem; border-radius: 10px; padding: 0 8px; background: var(--chip); color: var(--ink);
            text-transform: none; letter-spacing: 0; }
   .empty { color: var(--muted); font-size: .85rem; }
-  /* archives */
-  #archives { display: none; }
-  table { border-collapse: collapse; width: 100%; font-size: .85rem; }
-  th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 6px 8px; }
-  .yes { color: var(--ok); } .no { color: var(--bad); }
-  .hist { color: var(--warn); }
-  .tablewrap { overflow-x: auto; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; }
 </style>
 </head>
 <body>
 <main>
-  <h1>ELIZA (Weizenbaum, 1966)</h1>
-  <p class="sub">Portage Python fidèle, exécuté dans le navigateur par Pyodide.<br>Contact : Julien.Cegarra@univ-jfc.fr</p>
+  <header class="head">
+    <h1>ELIZA (Weizenbaum, 1966)</h1>
+    <div class="uilang" role="group" aria-label="Language of the page">
+      <button data-ui="en" lang="en">English</button>
+      <button data-ui="fr" lang="fr">Français</button>
+    </div>
+  </header>
+  <p class="sub"><span data-i18n="sub"></span><br><span data-i18n="contact"></span></p>
 
-  <div class="tabs" role="tablist">
-    <button id="tab-chat" role="tab" aria-selected="true">Converser</button>
-    <button id="tab-archives" role="tab" aria-selected="false">Archives</button>
-  </div>
+  <aside class="about" data-i18n-aria="about">
+    <p data-i18n-html="about1"></p>
+    <p data-i18n-html="about2"></p>
+    <p data-i18n-html="about3"></p>
+  </aside>
 
   <section id="chat">
     <div class="bar">
-      <label>Script
-        <select id="script">
-          <option value="doctor">DOCTOR (mars 1965, anglais ou français)</option>
-          <option value="palindrome">Machine de Turing : palindrome</option>
-          <option value="equal-number">Machine de Turing : autant de A que de B</option>
-          <option value="file">Fichier de script…</option>
-        </select>
-      </label>
-      <label>Langue
-        <select id="lang">
-          <option value="auto">automatique</option>
-          <option value="en">anglais</option>
-          <option value="fr">français</option>
-        </select>
-      </label>
+      <button id="settings-open" class="icon" data-i18n-aria="settings" data-i18n-title="settings"
+              aria-haspopup="dialog" aria-controls="settings">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>
+        </svg>
+      </button>
+      <button id="archives-open" class="icon" data-i18n-aria="archives" data-i18n-title="archives"
+              aria-haspopup="dialog" aria-controls="archives">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z"/><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z"/>
+        </svg>
+      </button>
+      <button id="reset" class="icon" data-i18n-aria="reset" data-i18n-title="reset">
+        <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="none" stroke="currentColor"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/>
+        </svg>
+      </button>
+      <span id="summary"></span>
       <span id="detected"></span>
-      <label>Version
-        <select id="version">
-          <option value="1966">1966 (article CACM)</option>
-          <option value="1965">1965 (listing retrouvé)</option>
-        </select>
-      </label>
-      <label>Présentation
-        <select id="look">
-          <option value="modern">moderne</option>
-          <option value="tty">télétype IBM 2741 (14,8 car./s)</option>
-          <option value="tty-fast">télétype, impression immédiate</option>
-        </select>
-      </label>
-      <label><input type="checkbox" id="explain"> fonctionnement</label>
-      <button id="save" hidden>Télécharger le script modifié</button>
-      <input type="file" id="file" accept=".txt" hidden>
+      <button id="save" hidden data-i18n="save"></button>
     </div>
+
+    <dialog id="settings" aria-labelledby="settings-title">
+      <form method="dialog">
+        <h2 id="settings-title" data-i18n="settings"></h2>
+        <label><span data-i18n="script"></span>
+          <select id="script">
+            <option value="doctor" data-i18n="optDoctor"></option>
+            <option value="cacm" data-i18n="optCacm"></option>
+            <option value="palindrome" data-i18n="optPalindrome"></option>
+            <option value="equal-number" data-i18n="optEqual"></option>
+            <option value="file" data-i18n="optFile"></option>
+          </select>
+        </label>
+        <label><span data-i18n="lang"></span>
+          <select id="lang">
+            <option value="auto" data-i18n="optAuto"></option>
+            <option value="en" data-i18n="optEn"></option>
+            <option value="fr" data-i18n="optFr"></option>
+          </select>
+        </label>
+        <label><span data-i18n="version"></span>
+          <select id="version">
+            <option value="1966" data-i18n="opt1966"></option>
+            <option value="1965" data-i18n="opt1965"></option>
+          </select>
+        </label>
+        <label><span data-i18n="look"></span>
+          <select id="look">
+            <option value="modern" data-i18n="optModern"></option>
+            <option value="tty" data-i18n="optTty"></option>
+            <option value="tty-fast" selected data-i18n="optTtyFast"></option>
+          </select>
+        </label>
+        <label class="check"><input type="checkbox" id="explain"> <span data-i18n="explain"></span></label>
+        <details class="info">
+          <summary><span class="i" aria-hidden="true">i</span><span data-i18n="teachTitle"></span></summary>
+          <p class="hint" data-i18n-html="hint"></p>
+        </details>
+        <p class="note" data-i18n="settingsNote"></p>
+        <div class="actions"><button value="close" data-i18n="close"></button></div>
+      </form>
+      <input type="file" id="file" accept=".txt" hidden>
+    </dialog>
 
     <div class="layout" id="layout">
       <div>
         <div id="log" aria-live="polite"></div>
         <form id="form">
-          <input id="say" autocomplete="off" placeholder="Chargement de Pyodide…" disabled>
-          <button id="send" disabled>Envoyer</button>
+          <input id="say" autocomplete="off" disabled>
+          <button id="send" disabled data-i18n="send"></button>
         </form>
-        <div class="hint">Comme en 1965, ELIZA peut apprendre : <code>* HI ((HI 0) (HELLO FROM 2))</code>
-          ajoute une règle, <code>+</code> ouvre l'éditeur (TYPE, SUBST, APPEND, ADD, RANK, DISPLA, START).</div>
       </div>
-      <aside id="steps" aria-label="Comment la réponse a été construite"></aside>
+      <aside id="steps" data-i18n-aria="stepsLabel"></aside>
     </div>
   </section>
 
-  <section id="archives">
-    <div class="bar">
-      <label>Conversation <select id="record"></select></label>
-      <button id="replay" disabled>Rejouer</button>
-    </div>
-    <p id="record-note" class="note"></p>
-    <div id="replay-out"></div>
-  </section>
+  <dialog id="archives" aria-labelledby="archives-title">
+    <form method="dialog">
+      <h2 id="archives-title" data-i18n="archives"></h2>
+      <label><span data-i18n="conversation"></span> <select id="record"></select></label>
+      <p id="record-note" class="note"></p>
+      <div class="actions">
+        <button value="close" data-i18n="close"></button>
+        <button id="replay" type="button" class="primary" disabled data-i18n="replay"></button>
+      </div>
+    </form>
+  </dialog>
 
-  <div id="status">Chargement…</div>
+  <div id="status"></div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/pyodide/v314.0.7/full/pyodide.js"></script>
@@ -176,13 +249,202 @@ const FILES = ["__init__.py", "engine.py", "history.py", "hollerith.py", "langua
                "multilingual.py", "script.py", "text.py",
                "scripts/doctor_1965_tape100.txt", "scripts/doctor_fr.txt",
                "scripts/turing_palindrome.txt", "scripts/turing_equal_number.txt"];
-// language of the browser, used by the automatic mode until the user has spoken
-const BROWSER_LANG = (navigator.language || "en").slice(0, 2).toLowerCase();
 const REDUCED_MOTION = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const el = (id) => document.getElementById(id);
-let py, scriptText = null, lastScript = "doctor", printing = Promise.resolve(), generation = 0;
-let RECORDS = [], SOURCES = {};
+let py, scriptText = null, lastScript = "doctor", fileName = null, printing = Promise.resolve(), generation = 0;
+let RECORDS = [], SOURCES = {}, lastSteps = null, lastLanguage = null;
+let archive = null;  // the record being replayed, while its session goes on
 const sources = {};  // archive texts already fetched
+
+// ---------------------------------------------------------------- texts of the page
+
+const T = {
+  en: {
+    sub: "A port true to the original (Python/Pyodide)",
+    contact: "Contact: Julien.Cegarra@univ-jfc.fr",
+    about: "About",
+    about1: "<strong>ELIZA</strong> is one of the very first conversation programs, written by Joseph "
+      + "Weizenbaum at MIT between 1964 and 1966. It does not grasp the meaning of what you say: it spots keywords in your "
+      + "sentence, cuts it up according to patterns and hands it back turned around (to “I am sad” it "
+      + "replies “IS IT BECAUSE YOU ARE SAD THAT YOU CAME TO ME”). Its most famous script, DOCTOR, "
+      + "imitates a Rogerian psychotherapist who keeps you talking without ever asserting anything.",
+    about2: "This is not an imitation: it is a transcription of the original code (MAD-SLIP, "
+      + "rediscovered in 2021), checked reply by reply against the conversations of the time.",
+    about3: "For its history, its sources and its many clones: "
+      + '<a href="https://elizagen.org/">elizagen.org</a>.',
+    script: "Script", optDoctor: "DOCTOR (March 1965, English or French)",
+    optCacm: "DOCTOR from the paper (1966, English, downloaded)",
+    optPalindrome: "Turing machine: palindrome", optEqual: "Turing machine: as many A as B",
+    optFile: "Script file…",
+    lang: "Language", optAuto: "automatic", optEn: "English", optFr: "French",
+    version: "Version", opt1966: "1966 (CACM paper)", opt1965: "1965 (recovered listing)",
+    look: "Display", optModern: "modern", optTty: "IBM 2741 teletype (14.8 char/s)",
+    optTtyFast: "teletype, instant printing",
+    explain: "how it works", save: "Download the modified script", send: "Send",
+    hint: "As in 1965, ELIZA can learn: <code>* HI ((HI 0) (HELLO FROM 2))</code> adds a rule, "
+      + "<code>+</code> opens the editor (TYPE, SUBST, APPEND, ADD, RANK, DISPLA, START).",
+    stepsLabel: "How the reply was built",
+    conversation: "Conversation", replay: "Replay",
+    loading: "Loading…", loadingPyodide: "Loading Pyodide…", placeholder: "Talk to ELIZA…",
+    detected: (code) => `(${code === "fr" ? "French" : "English"})`,
+    source: { rule: "script rule", memory: "memory recalled", none: "NONE rule",
+              nomatch: "built-in message", command: "teaching" },
+    command: "Teaching command: the script was read or changed, no conversation.",
+    empty: "Type a sentence to see how ELIZA builds its reply.",
+    pickReply: "Click any reply in the conversation to see how it was built.",
+    reading: "1. Reading",
+    discarded: (d) => `discarded before (no keyword): ${d}`,
+    cut: (c) => `cut after the delimiter: ${c}`,
+    limitNote: (n) => `LIMIT = ${n}: a memory is recalled only when it is 4.`,
+    keywords: "2. Keywords", only1965: "1965: only one kept", rank: (n) => ` (rank ${n})`,
+    noKeyword: "no keyword", stack: (k) => `stack: ${k}`,
+    text: (w) => `text: ${w}`,
+    noPatternLink: (l) => `no pattern fits, link to ${l}`, noPattern: "no pattern fits",
+    pattern: (d) => `pattern (${d})`, reassembly: (r) => `reply ${r}`, linkTo: (l) => `link to ${l}`,
+    newkey: "NEWKEY: next keyword on the stack",
+    rule: (k) => `3. Rule ${k}`, choice: (n) => `reply ${n}`,
+    memory: "4. Memory",
+    memoryNew: (i, w) => `transformation ${i} of 4, chosen by HASH of the last word “${w}”`,
+    fromMemory: "the reply comes from memory", queueEmpty: "empty queue",
+    waiting: (n) => `${n} waiting`, reply: "Reply",
+    ready: (v, info) => `Pyodide ${v}, ${info}.`,
+    error: (e) => `Error: ${e}`, fileError: (f, e) => `Error in ${f}: ${e}`,
+    downloading: (k) => `Downloading ${k}…`,
+    cacmLoaded: "Script: DOCTOR from the appendix of Weizenbaum's paper (CACM, 1966), © ACM, "
+      + "read from github.com/anthay/ELIZA.",
+    fileLoaded: (f) => `Script: ${f}`,
+    recordNote: (note, v) => `${note} Program: version ${v}. The texts are downloaded on demand from `
+      + "github.com/anthay/ELIZA and github.com/rupertl/eliza-ctss; they are not redistributed here.",
+    replayed: (title, same, n, old) => `${title}: ${same} replies out of ${n} identical to the reconstruction`
+      + (old ? `; the document of the time gave ${old} of them differently.` : "."),
+    archives: "Historical conversations", reset: "New conversation",
+    replaying: (title, year) => `Replay of ${title} (${year}). You can go on talking once it is over.`,
+    differs: (x) => `reconstruction (eliza.cpp, CTSS): ${x}`,
+    printed: (x) => `printed at the time: ${x}`,
+    archiveSummary: (title, v) => `${title} · program ${v}`,
+    settings: "Settings", close: "Close", teachTitle: "Teaching ELIZA",
+    settingsNote: "Changing the script, the language, the version or the display starts a new conversation.",
+  },
+  fr: {
+    sub: "Portage conforme à l'original (Python/Pyodide)",
+    contact: "Contact : Julien.Cegarra@univ-jfc.fr",
+    about: "À propos",
+    about1: "<strong>ELIZA</strong> est l'un des tout premiers programmes de conversation, écrit par "
+      + "Joseph Weizenbaum au MIT entre 1964 et 1966. Elle ne saisit pas le sens de ce que vous dites : elle repère des mots-clés "
+      + "dans votre phrase, la découpe selon des motifs et la renvoie retournée (à « I am sad », elle "
+      + "répond « IS IT BECAUSE YOU ARE SAD THAT YOU CAME TO ME »). Son script le plus célèbre, DOCTOR, "
+      + "imite un psychothérapeute rogérien qui relance sans jamais rien affirmer.",
+    about2: "Ce n'est pas une imitation : c'est une transcription du code d'origine (MAD-SLIP, retrouvé "
+      + "en 2021), vérifiée réponse par réponse contre les conversations d'époque.",
+    about3: "Pour son histoire, ses sources et ses nombreux clones : "
+      + '<a href="https://elizagen.org/">elizagen.org</a>.',
+    script: "Script", optDoctor: "DOCTOR (mars 1965, anglais ou français)",
+    optCacm: "DOCTOR de l'article (1966, anglais, téléchargé)",
+    optPalindrome: "Machine de Turing : palindrome", optEqual: "Machine de Turing : autant de A que de B",
+    optFile: "Fichier de script…",
+    lang: "Langue", optAuto: "automatique", optEn: "anglais", optFr: "français",
+    version: "Version", opt1966: "1966 (article CACM)", opt1965: "1965 (listing retrouvé)",
+    look: "Présentation", optModern: "moderne", optTty: "télétype IBM 2741 (14,8 car./s)",
+    optTtyFast: "télétype, impression immédiate",
+    explain: "fonctionnement", save: "Télécharger le script modifié", send: "Envoyer",
+    hint: "Comme en 1965, ELIZA peut apprendre : <code>* HI ((HI 0) (HELLO FROM 2))</code> ajoute une "
+      + "règle, <code>+</code> ouvre l'éditeur (TYPE, SUBST, APPEND, ADD, RANK, DISPLA, START).",
+    stepsLabel: "Comment la réponse a été construite",
+    conversation: "Conversation", replay: "Rejouer",
+    loading: "Chargement…", loadingPyodide: "Chargement de Pyodide…", placeholder: "Parlez à ELIZA…",
+    detected: (code) => `(${code === "fr" ? "français" : "anglais"})`,
+    source: { rule: "règle du script", memory: "mémoire rappelée", none: "règle NONE",
+              nomatch: "message intégré", command: "apprentissage" },
+    command: "Commande d'apprentissage : le script a été lu ou modifié, sans conversation.",
+    empty: "Écrivez une phrase pour voir comment ELIZA construit sa réponse.",
+    pickReply: "Cliquez sur une réponse de la conversation pour voir comment elle a été construite.",
+    reading: "1. Lecture",
+    discarded: (d) => `écarté avant (pas de mot-clé) : ${d}`,
+    cut: (c) => `coupé après le délimiteur : ${c}`,
+    limitNote: (n) => `LIMIT = ${n} : une mémoire n'est rappelée que lorsqu'il vaut 4.`,
+    keywords: "2. Mots-clés", only1965: "1965 : un seul retenu", rank: (n) => ` (rang ${n})`,
+    noKeyword: "aucun mot-clé", stack: (k) => `pile : ${k}`,
+    text: (w) => `texte : ${w}`,
+    noPatternLink: (l) => `aucun motif ne convient, renvoi à ${l}`, noPattern: "aucun motif ne convient",
+    pattern: (d) => `motif (${d})`, reassembly: (r) => `réponse ${r}`, linkTo: (l) => `renvoi à ${l}`,
+    newkey: "NEWKEY : mot-clé suivant de la pile",
+    rule: (k) => `3. Règle ${k}`, choice: (n) => `réponse ${n}`,
+    memory: "4. Mémoire",
+    memoryNew: (i, w) => `transformation ${i} sur 4, choisie par HASH du dernier mot « ${w} »`,
+    fromMemory: "la réponse vient de la mémoire", queueEmpty: "file vide",
+    waiting: (n) => `${n} en attente`, reply: "Réponse",
+    ready: (v, info) => `Pyodide ${v}, ${info}.`,
+    error: (e) => `Erreur : ${e}`, fileError: (f, e) => `Erreur dans ${f} : ${e}`,
+    downloading: (k) => `Téléchargement de ${k}…`,
+    cacmLoaded: "Script : DOCTOR de l'annexe de l'article de Weizenbaum (CACM, 1966), © ACM, "
+      + "lu depuis github.com/anthay/ELIZA.",
+    fileLoaded: (f) => `Script : ${f}`,
+    recordNote: (note, v) => `${note} Programme : version ${v}. Les textes sont téléchargés à la demande `
+      + "depuis github.com/anthay/ELIZA et github.com/rupertl/eliza-ctss ; ils ne sont pas redistribués ici.",
+    replayed: (title, same, n, old) => `${title} : ${same} réponses sur ${n} identiques à la reconstruction`
+      + (old ? ` ; le document d'époque en donnait ${old} autrement.` : "."),
+    archives: "Conversations historiques", reset: "Nouvelle conversation",
+    replaying: (title, year) => `Rejeu de ${title} (${year}). Vous pourrez continuer la conversation ensuite.`,
+    differs: (x) => `reconstruction (eliza.cpp, CTSS) : ${x}`,
+    printed: (x) => `imprimé à l'époque : ${x}`,
+    archiveSummary: (title, v) => `${title} · programme ${v}`,
+    settings: "Paramètres", close: "Fermer", teachTitle: "Apprendre à ELIZA",
+    settingsNote: "Changer le script, la langue, la version ou la présentation commence une nouvelle conversation.",
+  },
+};
+
+function storedUI() {
+  try { return localStorage.getItem("eliza-ui"); } catch { return null; }
+}
+function browserUI() {
+  // the first language of the browser that the page speaks
+  for (const tag of navigator.languages || [navigator.language || ""]) {
+    const code = tag.slice(0, 2).toLowerCase();
+    if (code in T) return code;
+  }
+  return null;
+}
+// ?lang=, else the visitor's last choice, else the browser's language, else English
+let UI = new URLSearchParams(location.search).get("lang") || storedUI() || browserUI() || "en";
+if (!(UI in T)) UI = "en";
+
+function t(key, ...args) {
+  const v = T[UI][key];
+  return typeof v === "function" ? v(...args) : v;
+}
+
+let status = () => t("loading");  // redrawn when the language changes
+function setStatus(fn) { status = fn; el("status").textContent = fn(); }
+
+const recordTitle = (r) => (UI === "fr" && r.title_fr) || r.title;
+const recordNote = (r) => (UI === "fr" && r.note_fr) || r.note;
+
+function applyUI() {
+  document.documentElement.lang = UI;
+  for (const n of document.querySelectorAll("[data-i18n]")) n.textContent = t(n.dataset.i18n);
+  for (const n of document.querySelectorAll("[data-i18n-html]")) n.innerHTML = t(n.dataset.i18nHtml);
+  for (const n of document.querySelectorAll("[data-i18n-aria]")) n.setAttribute("aria-label", t(n.dataset.i18nAria));
+  for (const n of document.querySelectorAll("[data-i18n-title]")) n.title = t(n.dataset.i18nTitle);
+  for (const b of document.querySelectorAll("[data-ui]")) b.setAttribute("aria-pressed", String(b.dataset.ui === UI));
+  el("say").placeholder = py ? t("placeholder") : t("loadingPyodide");
+  el("status").textContent = status();
+  showLanguage(lastLanguage);
+  showSummary();
+  renderSteps(lastSteps);
+  for (const o of el("record").options) {
+    const r = RECORDS.find((x) => x.key === o.value);
+    o.textContent = `${r.year} — ${recordTitle(r)}`;
+  }
+  if (RECORDS.length) showRecordNote();
+}
+
+for (const b of document.querySelectorAll("[data-ui]")) {
+  b.addEventListener("click", () => {
+    UI = b.dataset.ui;
+    try { localStorage.setItem("eliza-ui", UI); } catch {}
+    applyUI();
+  });
+}
 
 // Python side: every call returns a string (JSON), so the page keeps no PyProxy
 const API = `
@@ -197,12 +459,12 @@ def _language(s):
 def _current(s):
     return s.current if isinstance(s, Conversation) else s
 
-def api_start(name, text, lang, version, browser_lang):
+def api_start(name, text, lang, version, start_lang):
     # the DOCTOR follows the chosen language (or the user's, in automatic mode);
     # another script keeps its own language and only takes the profile
     global SESSION
     if text is None and name == "doctor":
-        s = doctor(lang, start=browser_lang, version=version)
+        s = doctor(lang, start=start_lang, version=version)
     else:
         script = parse(text) if text is not None else builtin_script(name)
         code = script.metadata.get("language", "en") if lang == "auto" else lang
@@ -222,14 +484,22 @@ def api_script():
 
 def api_records():
     return json.dumps(dict(sources=history.SOURCES, records=[
-        dict(key=k, title=r.title, year=r.year, note=r.note, needed=history.needed(r),
-             version=r.version) for k, r in history.CONVERSATIONS.items()]))
+        dict(key=k, title=r.title, title_fr=r.title_fr, year=r.year, note=r.note,
+             note_fr=r.note_fr, needed=history.needed(r), version=r.version) for k, r in history.CONVERSATIONS.items()]))
 
 def api_replay(key, texts_json):
+    # the session that replayed the record stays: the visitor can go on talking to it
+    global SESSION
     texts = json.loads(texts_json)
     record = history.CONVERSATIONS[key]
-    return json.dumps(history.replay(history.session(record, texts),
-                                     history.exchanges(record, texts)))
+    s = history.session(record, texts)
+    hello = s.hello()
+    rows = []
+    for e in history.exchanges(record, texts):
+        [row] = history.replay(s, [e])
+        rows.append(dict(row, steps=s.trace.steps))
+    SESSION = s
+    return json.dumps(dict(hello=hello, rows=rows, language=_language(s), steps=s.trace.steps))
 `;
 
 function call(fn, ...args) {
@@ -268,12 +538,32 @@ function add(cls, text) {
   return p;
 }
 
-async function typeOut(text, gen) {
+// the steps that built each reply, kept with the lines that show it
+const STEPS = new WeakMap();
+
+function explained(p, steps) {
+  if (steps) { STEPS.set(p, steps); p.classList.add("explained"); }
+  return p;
+}
+
+function markShown(steps) {
+  for (const p of el("log").querySelectorAll("p.explained"))
+    p.classList.toggle("shown", STEPS.get(p) === steps);
+}
+
+el("log").addEventListener("click", (e) => {
+  const p = e.target.closest("p.explained");
+  if (!p || !el("explain").checked) return;
+  renderSteps(STEPS.get(p));
+  markShown(STEPS.get(p));
+});
+
+async function typeOut(text, gen, steps) {
   // the IBM 2741 printed about 14.8 characters a second
   const slow = el("look").value === "tty" && !REDUCED_MOTION;
   for (const line of wrap80(text)) {
     if (gen !== generation) return;
-    const p = add("eliza", "");
+    const p = explained(add("eliza", ""), steps);
     if (!slow) { p.textContent = line; continue; }
     p.classList.add("cursor");
     for (const ch of line) {
@@ -291,16 +581,21 @@ function tidy(text) {
   return text.split("\n").map((row) => row.replace(/(\S) {2,}(?=\S)/g, "$1 ").trimEnd()).join("\n");
 }
 
-function showEliza(text) {
+function showEliza(text, notes = [], steps = null) {
+  // notes: remarks printed under the reply (what an archive recorded instead);
+  // steps: how the reply was built, shown when the reply is clicked
   const gen = generation;
   if (!tty()) {
-    if (text) add("eliza", tidy(text));
+    if (text) explained(add("eliza", tidy(text)), steps);
+    for (const n of notes) add("note diff", n);
     return Promise.resolve();
   }
   printing = printing.then(async () => {
     if (gen !== generation) return;
-    if (text) await typeOut(tidy(text), gen);
-    if (gen === generation) add("eliza", "INPUT");
+    if (text) await typeOut(tidy(text), gen, steps);
+    if (gen !== generation) return;
+    for (const n of notes) add("note diff", n);
+    add("eliza", "INPUT");
   });
   return printing;
 }
@@ -311,14 +606,23 @@ function showUser(text) {
   printing = printing.then(() => { if (gen === generation) { add("user", text); add("blank", ""); } });
 }
 
+function showSummary() {
+  // the settings in force, shown beside the icon that opens them
+  const chosen = (id) => el(id).selectedOptions[0].textContent;
+  if (archive) {
+    el("summary").textContent = [t("archiveSummary", recordTitle(archive), archive.version), chosen("look")].join(" · ");
+    return;
+  }
+  const script = lastScript === "file" && fileName ? fileName : chosen("script");
+  el("summary").textContent = [script, chosen("lang"), chosen("version"), chosen("look")].join(" · ");
+}
+
 function showLanguage(code) {
-  el("detected").textContent = el("lang").value === "auto" ? `(${code === "fr" ? "français" : "anglais"})` : "";
+  lastLanguage = code;
+  el("detected").textContent = code && !archive && el("lang").value === "auto" ? t("detected", code) : "";
 }
 
 // ---------------------------------------------------------------- how the reply was made
-
-const SOURCE = { rule: "règle du script", memory: "mémoire rappelée", none: "règle NONE",
-                 nomatch: "message intégré", command: "apprentissage" };
 
 function node(tag, cls, text) {
   const n = document.createElement(tag);
@@ -342,75 +646,94 @@ function chips(items) {
 }
 
 function renderSteps(steps) {
+  lastSteps = steps;
   const box = el("steps");
   box.textContent = "";
   if (!steps || !steps.input) {
-    box.append(node("p", "empty", steps && steps.source === "command"
-      ? "Commande d'apprentissage : le script a été lu ou modifié, sans conversation."
-      : "Écrivez une phrase pour voir comment ELIZA construit sa réponse."));
+    box.append(node("p", "empty", steps && steps.source === "command" ? t("command") : t("empty")));
     return;
   }
+  box.append(node("p", "empty", t("pickReply")));
   // 1. reading: the words, the clauses discarded, LIMIT
   const limit = node("span", "limit");
   for (let i = 1; i <= 4; i++) limit.append(node("i", i <= steps.limit ? "on" : ""));
   limit.title = `LIMIT = ${steps.limit}`;
-  box.append(card("1. Lecture", limit, chips(steps.input.map((w) => [w])),
-    ...steps.discarded.map((d) => node("div", "note", `écarté avant (pas de mot-clé) : ${d}`)),
-    ...(steps.cut ? [node("div", "note", `coupé après le délimiteur : ${steps.cut}`)] : []),
-    node("div", "note", `LIMIT = ${steps.limit} : une mémoire n'est rappelée que lorsqu'il vaut 4.`)));
+  box.append(card(t("reading"), limit, chips(steps.input.map((w) => [w])),
+    ...steps.discarded.map((d) => node("div", "note", t("discarded", d))),
+    ...(steps.cut ? [node("div", "note", t("cut", steps.cut))] : []),
+    node("div", "note", t("limitNote", steps.limit))));
 
   // 2. keywords and substitutions
   const top = steps.keystack[0];
-  box.append(card("2. Mots-clés", steps.version === "1965" ? "1965 : un seul retenu" : "",
+  box.append(card(t("keywords"), steps.version === "1965" ? t("only1965") : "",
     steps.keywords.length
       ? chips(steps.keywords.map((k) => [
-          k.word + (k.precedence ? ` (rang ${k.precedence})` : "") + (k.substitute ? ` → ${k.substitute}` : ""),
+          k.word + (k.precedence ? t("rank", k.precedence) : "") + (k.substitute ? ` → ${k.substitute}` : ""),
           k.word === top ? "top" : (k.transformation ? "" : "gone")]))
-      : node("div", "empty", "aucun mot-clé"),
+      : node("div", "empty", t("noKeyword")),
     node("div", "mono", steps.clause),
-    ...(steps.keystack.length ? [node("div", "note", "pile : " + steps.keystack.join(" · "))] : [])));
+    ...(steps.keystack.length ? [node("div", "note", t("stack", steps.keystack.join(" · ")))] : [])));
 
   // 3. decomposition and reassembly of each rule tried
   steps.rules.forEach((r) => {
-    const body = [node("div", "note", `texte : ${r.words || "∅"}`)];
+    const body = [node("div", "note", t("text", r.words || "∅"))];
     if (r.decomposition === null) {
-      body.push(node("div", "empty", r.action === "link" ? `aucun motif ne convient, renvoi à ${r.link}`
-                                                         : "aucun motif ne convient"));
+      body.push(node("div", "empty", r.action === "link" ? t("noPatternLink", r.link) : t("noPattern")));
     } else {
-      body.push(node("div", "mono", `motif (${r.decomposition})`));
+      body.push(node("div", "mono", t("pattern", r.decomposition)));
       const parts = node("div", "parts");
       r.components.forEach((c, n) => parts.append(node("span", "n", n + 1), node("span", "", c || "∅")));
-      body.push(parts, node("div", "mono", `réponse ${r.reassembly}`));
+      body.push(parts, node("div", "mono", t("reassembly", r.reassembly)));
       if (r.output !== undefined) body.push(node("div", "mono", `→ ${r.output || "∅"}`));
-      if (r.action === "link" || r.action === "pre") body.push(node("div", "note", `renvoi à ${r.link}`));
-      if (r.action === "newkey") body.push(node("div", "note", "NEWKEY : mot-clé suivant de la pile"));
+      if (r.action === "link" || r.action === "pre") body.push(node("div", "note", t("linkTo", r.link)));
+      if (r.action === "newkey") body.push(node("div", "note", t("newkey")));
     }
-    box.append(card(`3. Règle ${r.keyword}`, r.choice ? `réponse ${r.choice}` : "", ...body));
+    box.append(card(t("rule", r.keyword), r.choice ? t("choice", r.choice) : "", ...body));
   });
 
   // 4. memory
   const mem = [];
   if (steps.memory_new)
     mem.push(node("div", "mono", `+ ${steps.memory_new.text}`),
-             node("div", "note", `transformation ${steps.memory_new.index} sur 4, choisie par HASH du dernier mot « ${steps.memory_new.last_word} »`));
-  if (steps.source === "memory") mem.push(node("div", "note", "la réponse vient de la mémoire"));
-  mem.push(steps.memories.length ? chips(steps.memories.map((m) => [m])) : node("div", "empty", "file vide"));
-  box.append(card("4. Mémoire", `${steps.memories.length} en attente`, ...mem));
-  box.append(card("Réponse", node("span", "badge", SOURCE[steps.source] || steps.source),
+             node("div", "note", t("memoryNew", steps.memory_new.index, steps.memory_new.last_word)));
+  if (steps.source === "memory") mem.push(node("div", "note", t("fromMemory")));
+  mem.push(steps.memories.length ? chips(steps.memories.map((m) => [m])) : node("div", "empty", t("queueEmpty")));
+  box.append(card(t("memory"), t("waiting", steps.memories.length), ...mem));
+  box.append(card(t("reply"), node("span", "badge", t("source")[steps.source] || steps.source),
                   node("div", "mono", steps.reply || "∅")));
 }
 
 // ---------------------------------------------------------------- conversation
 
-function start() {
-  const name = el("script").value === "file" ? null : el("script").value;
-  const out = call("api_start", name, scriptText, el("lang").value, el("version").value, BROWSER_LANG);
+async function fetchSource(key) {
+  // texts under copyright (the 1966 script, © ACM) are read from their
+  // repositories at pinned commits; they are not redistributed with the page
+  if (!(key in sources)) {
+    setStatus(() => t("downloading", key));
+    const resp = await fetch(SOURCES[key]);
+    if (!resp.ok) throw new Error(`${SOURCES[key]} : HTTP ${resp.status}`);
+    sources[key] = await resp.text();
+  }
+  return sources[key];
+}
+
+function clearLog() {
   generation += 1;  // stops what the teletype of the previous session was printing
   printing = Promise.resolve();
   el("log").textContent = "";
   el("log").className = tty() ? "tty" : "";
   el("save").hidden = true;
+}
+
+function start() {
+  const choice = el("script").value;
+  const name = choice === "file" || choice === "cacm" ? null : choice;
+  const lang = choice === "cacm" ? "en" : el("lang").value;  // the 1966 script is in English only
+  const out = call("api_start", name, scriptText, lang, el("version").value, UI);
+  archive = null;
+  clearLog();
   showLanguage(out.language);
+  showSummary();
   renderSteps(null);
   showEliza(out.hello);
   el("say").focus();
@@ -418,7 +741,7 @@ function start() {
 
 function restart() {
   try { start(); }
-  catch (err) { el("status").textContent = "Erreur : " + (err.message || err); }
+  catch (err) { setStatus(() => t("error", err.message || err)); }
 }
 
 el("form").addEventListener("submit", async (e) => {
@@ -429,17 +752,31 @@ el("form").addEventListener("submit", async (e) => {
   showUser(text);
   let out;
   try { out = call("api_respond", text); }
-  catch (err) { add("note", "Erreur : " + (err.message || err)); return; }
+  catch (err) { add("note", t("error", err.message || err)); return; }
   showLanguage(out.language);
   renderSteps(out.steps);
   el("save").hidden = !out.modified;
   el("send").disabled = true;
-  await showEliza(out.reply);
+  const steps = out.steps && out.steps.input ? out.steps : null;  // teaching commands build no reply
+  await showEliza(out.reply, [], steps);
+  markShown(steps);
   el("send").disabled = false;
 });
 
-el("script").addEventListener("change", () => {
+el("script").addEventListener("change", async () => {
   if (el("script").value === "file") { el("file").click(); return; }
+  if (el("script").value === "cacm") {
+    try {
+      scriptText = await fetchSource("doctor_1966_cacm.txt");
+      start();
+      lastScript = "cacm";
+      setStatus(() => t("cacmLoaded"));
+    } catch (err) {
+      el("script").value = lastScript;
+      setStatus(() => t("error", err.message || err));
+    }
+    return;
+  }
   lastScript = el("script").value;
   scriptText = null;
   restart();
@@ -449,16 +786,27 @@ el("file").addEventListener("change", async () => {
   const f = el("file").files[0];
   el("file").value = "";  // the same file can be chosen again after an edit
   if (!f) { el("script").value = lastScript; return; }
-  const previous = scriptText;
+  const previous = scriptText, before = { lastScript, fileName };
   scriptText = await f.text();
-  try { start(); lastScript = "file"; el("status").textContent = `Script : ${f.name}`; }
+  try { lastScript = "file"; fileName = f.name; start(); setStatus(() => t("fileLoaded", f.name)); }
   catch (err) {
     scriptText = previous;
+    ({ lastScript, fileName } = before);
     el("script").value = lastScript;
-    el("status").textContent = `Erreur dans ${f.name} : ` + (err.message || err);
+    showSummary();
+    setStatus(() => t("fileError", f.name, err.message || err));
   }
 });
 for (const id of ["lang", "version", "look"]) el(id).addEventListener("change", restart);
+el("settings-open").addEventListener("click", () => el("settings").showModal());
+el("archives-open").addEventListener("click", () => el("archives").showModal());
+el("reset").addEventListener("click", () => { if (py) restart(); });  // same settings, from the start
+for (const id of ["settings", "archives"]) {
+  el(id).addEventListener("click", (e) => {
+    if (e.target === el(id)) el(id).close();  // a click on the backdrop
+  });
+  el(id).addEventListener("close", () => { if (py) el("say").focus(); });
+}
 el("explain").addEventListener("change", () => {
   el("layout").classList.toggle("with-steps", el("explain").checked);
 });
@@ -473,62 +821,51 @@ el("save").addEventListener("click", () => {
 
 // ---------------------------------------------------------------- archives
 
-function showTab(name) {
-  el("tab-chat").setAttribute("aria-selected", String(name === "chat"));
-  el("tab-archives").setAttribute("aria-selected", String(name === "archives"));
-  el("chat").style.display = name === "chat" ? "" : "none";
-  el("archives").style.display = name === "archives" ? "block" : "none";
-}
-el("tab-chat").addEventListener("click", () => showTab("chat"));
-el("tab-archives").addEventListener("click", () => showTab("archives"));
-
 function showRecordNote() {
   const r = RECORDS.find((x) => x.key === el("record").value);
-  el("record-note").textContent = `${r.note} Programme : version ${r.version}. Les textes sont téléchargés `
-    + "à la demande depuis github.com/anthay/ELIZA et github.com/rupertl/eliza-ctss ; ils ne sont pas redistribués ici.";
+  el("record-note").textContent = t("recordNote", recordNote(r), r.version);
 }
 el("record").addEventListener("change", showRecordNote);
 
 el("replay").addEventListener("click", async () => {
   const r = RECORDS.find((x) => x.key === el("record").value);
   el("replay").disabled = true;
-  el("replay-out").textContent = "";
   try {
-    for (const key of r.needed) {
-      if (!(key in sources)) {
-        el("status").textContent = `Téléchargement de ${key}…`;
-        const resp = await fetch(SOURCES[key]);
-        if (!resp.ok) throw new Error(`${SOURCES[key]} : HTTP ${resp.status}`);
-        sources[key] = await resp.text();
-      }
-    }
+    for (const key of r.needed) await fetchSource(key);
     const texts = Object.fromEntries(r.needed.map((k) => [k, sources[k]]));
-    const rows = call("api_replay", r.key, JSON.stringify(texts));
-    const same = rows.filter((x) => x.same).length;
-    const old = rows.filter((x) => x.historical).length;
-    el("status").textContent = `${r.title} : ${same} réponses sur ${rows.length} identiques à la reconstruction`
-      + (old ? ` ; le document d'époque en donnait ${old} autrement.` : ".");
-    const table = node("table");
-    const head = node("tr");
-    for (const h of ["", "Entrée", "Ce portage", "Reconstruction", "Document d'époque, si différent"])
-      head.append(node("th", "", h));
-    table.append(head);
-    for (const x of rows) {
-      const tr = node("tr");
-      tr.append(node("td", x.same ? "yes" : "no", x.same ? "✓" : "✗"), node("td", "", x.prompt),
-                node("td", "mono", x.reply), node("td", "mono", x.same ? "identique" : x.expected),
-                node("td", "mono hist", x.historical || ""));
-      table.append(tr);
-    }
-    const box = node("div", "tablewrap");
-    box.append(table);
-    el("replay-out").append(box);
+    const out = call("api_replay", r.key, JSON.stringify(texts));
+    el("archives").close();
+    replay(r, out);
   } catch (err) {
-    el("status").textContent = "Erreur : " + (err.message || err);
+    setStatus(() => t("error", err.message || err));
   } finally {
     el("replay").disabled = false;
   }
 });
+
+function replay(r, { hello, rows, language, steps }) {
+  // the archive is printed in the conversation, as if typed again;
+  // where this port departs from the record, the record is noted under the reply
+  archive = r;
+  clearLog();
+  showLanguage(language);
+  showSummary();
+  renderSteps(steps);
+  add("note", t("replaying", recordTitle(r), r.year));
+  showEliza(hello);
+  for (const x of rows) {
+    showUser(x.prompt);
+    const notes = [];
+    if (!x.same) notes.push(t("differs", x.expected));
+    if (x.historical) notes.push(t("printed", x.historical));
+    showEliza(x.reply, notes, x.steps);
+  }
+  const last = rows.length ? rows[rows.length - 1].steps : null;
+  printing.then(() => markShown(last));
+  const same = rows.filter((x) => x.same).length;
+  const old = rows.filter((x) => x.historical).length;
+  setStatus(() => t("replayed", recordTitle(r), same, rows.length, old));
+}
 
 // ---------------------------------------------------------------- start up
 
@@ -542,17 +879,17 @@ async function main() {
   }
   py.runPython(API);
   const info = py.runPython("import sys, eliza; f'Python {sys.version.split()[0]}, eliza {eliza.__version__}'");
-  el("status").textContent = `Pyodide ${py.version}, ${info}.`;
+  setStatus(() => t("ready", py.version, info));
   ({ sources: SOURCES, records: RECORDS } = call("api_records"));
-  for (const r of RECORDS) el("record").append(new Option(`${r.year} — ${r.title}`, r.key));
-  showRecordNote();
+  for (const r of RECORDS) el("record").append(new Option("", r.key));
   el("replay").disabled = false;
   el("say").disabled = el("send").disabled = false;
-  el("say").placeholder = "Parlez à ELIZA…";
+  applyUI();
   start();
 }
 
-main().catch((err) => { el("status").textContent = "Erreur : " + err; });
+applyUI();
+main().catch((err) => setStatus(() => t("error", err)));
 </script>
 </body>
 </html>

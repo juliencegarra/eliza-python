@@ -104,13 +104,17 @@ python -m http.server 8765
 puis ouvrir <http://localhost:8765/web/>. La page propose :
 
 - le choix du script, de la langue (ou détection automatique) et de la version (1965 ou 1966) ;
+  le DOCTOR de l'article de 1966 (© ACM) y est proposé en le lisant à la demande depuis le
+  dépôt d'Anthony Hay, sans être redistribué ;
 - le panneau **fonctionnement**, qui montre pas à pas la lecture et le compteur `LIMIT`,
   les mots-clés et substitutions, la décomposition numérotée, le réassemblage et la file
   de mémoire ;
 - une présentation **télétype** : papier en continu, 80 colonnes et invite `INPUT` comme
   sur CTSS, impression à 14,8 caractères par seconde comme l'IBM 2741 ;
 - l'apprentissage (`*`, `+`) et le téléchargement du script modifié ;
-- l'onglet **Archives**, qui rejoue les conversations historiques. Leurs textes sont
+- les **conversations historiques** (icône de livre), rejouées dans la conversation elle-même,
+  avec sous chaque réponse ce que l'archive donnait d'autre ; on peut ensuite continuer à
+  parler à cette ELIZA. Leurs textes sont
   téléchargés à la demande depuis les dépôts d'Anthony Hay et de Rupert Lane, sans être
   redistribués.
 

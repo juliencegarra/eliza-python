@@ -38,53 +38,77 @@ class Record:
     script: str        # "builtin:<name>" or a SOURCES key
     version: str       # engine version that reproduces it
     note: str
+    title_fr: str = ""
+    note_fr: str = ""
 
 
 CONVERSATIONS = {
     "cacm-1966": Record(
-        "« Men are all alike » (Weizenbaum, CACM)", "1966",
+        "“Men are all alike” (Weizenbaum, CACM)", "1966",
         "eliza.cpp:weizenbaum_1966_cacm_conversation", "doctor_1966_cacm.txt", "1966",
+        "The conversation printed in Weizenbaum's paper, with the script of its appendix.",
+        "« Men are all alike » (Weizenbaum, CACM)",
         "La conversation imprimée dans l'article de Weizenbaum, avec le script de son annexe."),
     "ctss-100": Record(
-        "Le code d'origine sur CTSS, script 100", "1965",
+        "The original code on CTSS, script 100", "1965",
         "ctss:100", "builtin:doctor", "1965",
+        "Weizenbaum's MAD-SLIP code run on an emulated IBM 7094 by Rupert Lane (2024).",
+        "Le code d'origine sur CTSS, script 100",
         "Le code MAD-SLIP de Weizenbaum exécuté sur un IBM 7094 émulé par Rupert Lane (2024)."),
     "ctss-200": Record(
-        "Le code d'origine sur CTSS, script 200", "1965",
+        "The original code on CTSS, script 200", "1965",
         "ctss:200", "ctss_tape200.txt", "1965",
+        "The same, with the 1966 script adapted by Rupert Lane: see “= DIT”.",
+        "Le code d'origine sur CTSS, script 200",
         "Idem, avec le script de 1966 adapté par Rupert Lane : voir « = DIT »."),
     "alt-men-1966": Record(
-        "« Men are all alike », autre version (archives du MIT)", "1966",
+        "“Men are all alike”, another version (MIT archives)", "1966",
         "eliza.cpp:weizenbaum_alt_men_are_all_alike_convo", "doctor_1966_cacm.txt", "1966",
+        "A typed variant found in Weizenbaum's papers at MIT.",
+        "« Men are all alike », autre version (archives du MIT)",
         "Une variante dactylographiée trouvée dans les papiers de Weizenbaum au MIT."),
     "unhappy-1966": Record(
-        "« I am very unhappy these days » (archives du MIT)", "1966",
+        "“I am very unhappy these days” (MIT archives)", "1966",
         "eliza.cpp:weizenbaum_I_am_very_unhappy_these_days_convo", "doctor_1966_cacm.txt", "1966",
+        "From the MIT Distinctive Collections.",
+        "« I am very unhappy these days » (archives du MIT)",
         "Tirée des MIT Distinctive Collections."),
     "neumann-1966": Record(
-        "Peter G. Neumann parle à ELIZA", "c. 1966",
+        "Peter G. Neumann talks to ELIZA", "c. 1966",
         "eliza.cpp:the_peter_g_neumann_1966_conversation", "doctor_1966_cacm.txt", "1966",
+        "Found in Neumann's papers by Paul McJones (2026).",
+        "Peter G. Neumann parle à ELIZA",
         "Retrouvée dans les papiers de Neumann par Paul McJones (2026)."),
     "boston-globe-1966": Record(
-        "Le Boston Globe chez le docteur", "1966",
+        "The Boston Globe sees the doctor", "1966",
         "eliza.cpp:boston_globe_1966_conversation", "doctor_1966_cacm.txt", "1966",
+        "Published by Robert L. Levey on 22 September 1966; the script used is unknown.",
+        "Le Boston Globe chez le docteur",
         "Publiée par Robert L. Levey le 22 septembre 1966 ; le script utilisé est inconnu."),
     "explosion-1967": Record(
         "The Communications Explosion (film)", "1967",
         "eliza.cpp:weizenbaum_communications_explosion_1967_conversation",
         "doctor_1966_cacm.txt", "1966",
+        "Weizenbaum demonstrates ELIZA, on film.",
+        "The Communications Explosion (film)",
         "Weizenbaum fait une démonstration d'ELIZA, filmée."),
     "michie-1968": Record(
-        "« Computer -- servant or master? » (Michie)", "1968",
+        "“Computer -- servant or master?” (Michie)", "1968",
         "eliza.cpp:michie_computer_servant_or_master_1968_conversation", "builtin:doctor", "1966",
+        "Quoted by Donald Michie in Spectrum; reproduced with the 1965 TAPE 100 script.",
+        "« Computer -- servant or master? » (Michie)",
         "Citée par Donald Michie dans Spectrum ; reproduite avec le script TAPE 100 de 1965."),
     "therapy-game-1977": Record(
         "The Therapy Game", "1977",
         "eliza.cpp:weizenbaum_july_1977_conversation", "doctor_1966_cacm.txt", "1966",
+        "A conversation from July 1977.",
+        "The Therapy Game",
         "Une conversation de juillet 1977."),
     "mind-machines-1978": Record(
         "The Mind Machines (film)", "1978",
         "eliza.cpp:weizenbaum_the_mind_machines_1978_conversation", "doctor_1966_cacm.txt", "1966",
+        "Weizenbaum demonstrates ELIZA, on film.",
+        "The Mind Machines (film)",
         "Weizenbaum fait une démonstration d'ELIZA, filmée."),
 }
 
